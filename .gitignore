@@ -9,6 +9,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Local Configuration ###
+.env
+.application.properties
+
 ### STS ###
 .apt_generated
 .classpath
