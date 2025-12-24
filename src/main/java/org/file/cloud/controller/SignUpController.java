@@ -13,7 +13,7 @@ public class SignUpController {
 
     @PostMapping("/auth/sign-up")
     public void registerUser(@RequestBody UserDto userDto) {
-        RequestValidator.validateName(userDto.getUsername());
+        RequestValidator.validate(userDto);
 
 
     }
