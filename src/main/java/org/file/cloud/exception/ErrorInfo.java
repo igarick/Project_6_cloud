@@ -14,6 +14,18 @@ public enum ErrorInfo {
     PASSWORD_MATCHES_ERROR("Passwords must match", SC_BAD_REQUEST),
 
 
+    USERNAME_DUPLICATE_ERROR("User with this name already exists", SC_CONFLICT),
+
+    // dao
+    DATA_SAVE_ERROR("Data save error", SC_INTERNAL_SERVER_ERROR),
+    DATA_FETCH_ERROR("Data fetch error", SC_INTERNAL_SERVER_ERROR),
+
+
+    USER_NOT_FOUND("User with this name was not found", SC_NOT_FOUND),
+
+
+
+
 
     end("Name must be between 3 and 15 characters", SC_BAD_REQUEST);
 

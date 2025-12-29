@@ -1,7 +1,7 @@
 package org.file.cloud.security;
 
 import lombok.AllArgsConstructor;
-import org.file.cloud.model.Person;
+import org.file.cloud.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -10,7 +10,7 @@ import java.util.List;
 
 @AllArgsConstructor
 public class PersonDetails implements UserDetails {
-    private final Person person;
+    private final User person;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
