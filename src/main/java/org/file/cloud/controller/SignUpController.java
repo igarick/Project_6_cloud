@@ -1,5 +1,8 @@
 package org.file.cloud.controller;
 
+import io.minio.MinioClient;
+import io.minio.errors.*;
+import io.minio.messages.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -10,13 +13,17 @@ import org.file.cloud.dto.UsernameDto;
 import org.file.cloud.service.UserService;
 import org.file.cloud.validator.RequestValidator;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
@@ -26,7 +33,8 @@ import static org.springframework.http.HttpStatus.OK;
 @RequiredArgsConstructor
 public class SignUpController {
     private final UserService userService;
-    private final AuthenticationManager authenticationManager;
+
+    private final MinioClient minioClient;
 
     @PostMapping("/api/auth/sign-up")
     public ResponseEntity<UsernameDto> signUpUser(@RequestBody UserSignUpDto userSignUpDto) {
@@ -46,7 +54,12 @@ public class SignUpController {
     }
 
     @GetMapping("/authorised")
-    public void authorised(@AuthenticationPrincipal UserDetails userDetails) {
-         log.info(userDetails.toString());
+    public void authorised(@AuthenticationPrincipal UserDetails userDetails) throws Exception {
+
+        List<Bucket> buckets = minioClient.listBuckets();
+
+        buckets.forEach(bucket -> System.out.println(bucket.name()));
+
+        log.info("Test authorization. User = {}", userDetails.getUsername());
     }
 }

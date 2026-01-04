@@ -30,9 +30,47 @@ services:
           condition: service_healthy
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+  minio:
+    image: minio/minio:latest
+    container_name: container-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+
+
 volumes:
   db-data:
   pgadmin-data:
+  minio-data:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

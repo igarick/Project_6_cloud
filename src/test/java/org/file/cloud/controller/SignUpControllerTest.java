@@ -34,7 +34,7 @@ class SignUpControllerTest {
     UserRepository userRepository;
 
     @Test
-    void shouldPersistUser() {
+    void shouldPersistUser_whenCreatingNewUser() {
         UserSignUpDto userSignUpDto = UserSignUpDto.builder()
                 .username("Robert")
                 .password("Robert")
@@ -45,10 +45,10 @@ class SignUpControllerTest {
     }
 
     @Test
-    void shouldThrowException_whenUserAlreadyExists() {
+    void shouldThrowDuplicateException_whenUserAlreadyExists() {
         UserSignUpDto userSignUpDto = UserSignUpDto.builder()
-                .username("Robert")
-                .password("Robert")
+                .username("Tom")
+                .password("Tom")
                 .build();
         userService.signUp(userSignUpDto);
         assertThatExceptionOfType(DuplicateUserException.class).isThrownBy(() -> userService.signUp(userSignUpDto));
