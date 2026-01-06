@@ -1,4 +1,4 @@
-package org.file.cloud.service;
+package org.file.cloud.service.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

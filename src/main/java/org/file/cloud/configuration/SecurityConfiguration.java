@@ -1,9 +1,8 @@
-package org.file.cloud.security;
+package org.file.cloud.configuration;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.security.AuthenticatedLogoutSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -18,7 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 
@@ -26,7 +24,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfig {
+public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticatedLogoutSuccessHandler logoutHandler) throws Exception {
@@ -34,7 +32,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)

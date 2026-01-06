@@ -13,11 +13,11 @@ import static org.springframework.http.HttpStatus.OK;
 
 @Slf4j
 @RestController
-@RequestMapping("api/user")
+@RequestMapping("/api/user")
 public class UserController {
 
     @GetMapping("/me")
-    public ResponseEntity<?> getUser(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<UsernameDto> getUser(@AuthenticationPrincipal UserDetails userDetails) {
         log.info("Current user = {}", userDetails.getUsername());
         return ResponseEntity.status(OK).body(new UsernameDto(userDetails.getUsername()));
     }

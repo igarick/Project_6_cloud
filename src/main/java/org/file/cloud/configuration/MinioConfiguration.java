@@ -1,4 +1,4 @@
-package org.file.cloud.controller;
+package org.file.cloud.configuration;
 
 
 import io.minio.MinioClient;
