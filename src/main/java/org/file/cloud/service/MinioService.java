@@ -7,6 +7,7 @@ import io.minio.Result;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.dto.folder.EmptyFolderDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.FolderException;
 import org.file.cloud.model.User;
@@ -25,6 +26,7 @@ public class MinioService {
 
     private final String MAIN_BUCKET = "user-files";
     private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
+    private final String RESOURCE_TYPE = "DIRECTORY";
 
     public void createFolder(String username, String resourcePath) throws Exception {
         String userRootFolder = getUserRootFolder(username);
@@ -36,7 +38,44 @@ public class MinioService {
                         .stream(InputStream.nullInputStream(), 0, -1)
                         .build());
         log.info("Folder - {} was created", resourcePath);
+
     }
+
+//    {
+//        "path": "folder1/folder2/", // путь к папке, в которой лежит ресурс
+//            "name": "folder3",
+//            "type": "DIRECTORY"
+//    }
+
+
+//              getParentFolderPath()
+    // if "path": ""
+    // "name": = resourcePath
+
+    // if "path": "test/"
+    // "name": -  взять ТЕСТ/ - стринг.длина
+    // из resourcePath вычесть resourcePath
+
+    public EmptyFolderDto getInfoToResponse(String username, String resourcePath) {
+        String parentFolderPath = getParentFolderPath(resourcePath);
+        log. info("=================" + parentFolderPath);
+
+        String name;
+        if (parentFolderPath.isEmpty()) {
+            name = resourcePath.substring(0, resourcePath.length() - 1);
+        } else {
+            int length = parentFolderPath.length();
+            name = resourcePath.substring(length, resourcePath.length() - 1);
+        }
+        log.info("======================" + name);
+        return EmptyFolderDto.builder()
+                .name(name)
+                .path(parentFolderPath)
+                .type(RESOURCE_TYPE)
+                .build();
+    }
+
+
 
     public void validateFolderExists(String username, String resourcePath) {
         String userRootFolder = getUserRootFolder(username);
@@ -56,6 +95,7 @@ public class MinioService {
             throw new FolderException(ErrorInfo.FOLDER_ALREADY_EXISTS);
         }
         log.info("Folder - {} does not exists", fullPath);
+        getInfoToResponse(username, resourcePath);
     }
 
     private String getParentFolderPath(String resourcePath) {

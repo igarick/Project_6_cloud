@@ -2,10 +2,13 @@ package org.file.cloud.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.dto.folder.EmptyFolderDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.FolderException;
 import org.file.cloud.exception.path.InvalidOrEmptyPathToNewFolderException;
 import org.file.cloud.service.MinioService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +38,7 @@ public class MinioController {
     }
 
     @PostMapping("/api/directory")
-    public void getInfoDirectory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
+    public ResponseEntity<EmptyFolderDto> getInfoDirectory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
         // проверка на null, пустоту и отсутствие завершающего /
         if (path == null || path.startsWith("/") || !path.endsWith("/") || path.contains("//")) {
             log.warn("Invalid or empty path to the new folder");
@@ -62,7 +65,9 @@ public class MinioController {
         }
 
         minioService.validateFolderExists(userDetails.getUsername(), path);
-        minioService.createFolder(userDetails.getUsername(), path);
+//        minioService.createFolder(userDetails.getUsername(), path);
+        EmptyFolderDto infoToResponse = minioService.getInfoToResponse(userDetails.getUsername(), path);
+        return ResponseEntity.status(HttpStatus.CREATED).body(infoToResponse);
 
         // собрать родительский путь
 //        StringBuilder parentPath = new StringBuilder();
