@@ -25,6 +25,7 @@ public enum ErrorInfo {
 
     //validate path
     INVALID_OR_EMPTY_PATH("Invalid or empty path to the new folder", SC_BAD_REQUEST),
+    CHARACTER_LIMIT_ERROR("Path exceeds maximum length", SC_BAD_REQUEST),
 
 
     // folder

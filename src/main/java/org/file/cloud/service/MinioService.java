@@ -24,54 +24,57 @@ public class MinioService {
     private final UserRepository userRepository;
 
     private final String MAIN_BUCKET = "user-files";
-    private final String USER_HOME_PREFIX_PATTERN = "user-%s-files/";
+    private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
 
-    public void createFolder(String username, String mainPath) throws Exception {
-        Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
-        User user = byUsernameIgnoreCase.get();
-        int id = user.getId();
-        String path = String.format(USER_HOME_PREFIX_PATTERN, id);
-        String bucket = path + mainPath;
-
+    public void createFolder(String username, String resourcePath) throws Exception {
+        String userRootFolder = getUserRootFolder(username);
+        String fullPath = userRootFolder + resourcePath;
         minioClient.putObject(
                 PutObjectArgs.builder()
                         .bucket(MAIN_BUCKET)
-                        .object(bucket)
+                        .object(fullPath)
                         .stream(InputStream.nullInputStream(), 0, -1)
-//                        .contentType("video/mp4")
                         .build());
-        log.info("Folder = {} was created", bucket);
+        log.info("Folder - {} was created", resourcePath);
     }
 
-//    public void createFolder(String username, String mainPath) throws Exception {
-//        Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
-//        User user = byUsernameIgnoreCase.get();
-//        int id = user.getId();
-//        String path = String.format(USER_FILES_BUCKET, id);
-//        String bucket = path + mainPath;
-//
-//        minioClient.putObject(
-//                PutObjectArgs.builder()
-//                        .bucket(MAIN_BUCKET)
-//                        .object(bucket)
-//                        .stream(InputStream.nullInputStream(), 0, -1)
-////                        .contentType("video/mp4")
-//                        .build());
-//    }
+    public void validateFolderExists(String username, String resourcePath) {
+        String userRootFolder = getUserRootFolder(username);
+        String parentFolderPath = getParentFolderPath(resourcePath);
 
-    public boolean checkParentFolderExists(String username, String pathToParentFolder) {
+        String fullParentPath = userRootFolder + parentFolderPath;
+        String fullPath = userRootFolder + resourcePath;
+
+        if (!isFolderExists(fullParentPath)) {
+            log.warn("Path to parent folder - {} does not exist", fullParentPath);
+            throw new FolderException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
+        }
+        log.info("The parent folder - {} exists", fullParentPath);
+
+        if (isFolderExists(fullPath)) {
+            log.warn("Folder - {} already exists", fullPath);
+            throw new FolderException(ErrorInfo.FOLDER_ALREADY_EXISTS);
+        }
+        log.info("Folder - {} does not exists", fullPath);
+    }
+
+    private String getParentFolderPath(String resourcePath) {
+        String parentFolder;
+        int lastSlash = resourcePath.lastIndexOf("/", resourcePath.length() - 2);
+        if (lastSlash == -1) {
+            parentFolder = "";
+        } else {
+            parentFolder = resourcePath.substring(0, lastSlash + 1);
+        }
+        log.info("Parent folder path - {}", parentFolder);
+        return parentFolder;
+    }
+
+    private String getUserRootFolder(String username) {
         Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
         User user = byUsernameIgnoreCase.get();
         int id = user.getId();
-        String userHomePrefix = String.format(USER_HOME_PREFIX_PATTERN, id);
-        String path = userHomePrefix + pathToParentFolder;
-
-        if (!isFolderExists(path)) {
-            log.warn("The parent folder - {} does not exist", path);
-            throw new FolderException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
-        }
-        log.warn("The parent folder - {} exists", path);
-        return true;
+        return String.format(USER_ROOT_FOLDER_TEMPLATE, id);
     }
 
     private boolean isFolderExists(String path) {
@@ -83,29 +86,56 @@ public class MinioService {
         return results.iterator().hasNext();
     }
 
-    public boolean isFolderAlreadyExists(String username, String mainPath) {
-        Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
-        User user = byUsernameIgnoreCase.get();
-        int id = user.getId();
-        String path = String.format(USER_HOME_PREFIX_PATTERN, id);
-        String bucket = path + mainPath;
-
-        if (isExist(bucket)) {
-            log.warn("Folder - {} already exists", bucket);
-            return true;
+//    public boolean isFolderExists(String path) {
+//
+//        if (!isFolderExistsQQQQQQQ(path)) {
+//            log.warn("The parent folder - {} does not exist", path);
 //            throw new FolderException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
-        }
-        log.warn("Folder - {} does not exists", bucket);
-        return false;
-    }
+//        }
+//        log.warn("The parent folder - {} exists", path);
+//        return true;
 
-    private boolean isExist(String bucket) {
-        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
-                .bucket(MAIN_BUCKET)
-                .prefix(bucket)
-                .recursive(false)
-                .build());
-        return results.iterator().hasNext();
-    }
+//    }
+
+//    public boolean isParentFolderExists(String username, String pathToParentFolder) {
+//        Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
+//        User user = byUsernameIgnoreCase.get();
+//        int id = user.getId();
+//        String userRootFolder = String.format(USER_ROOT_FOLDER_TEMPLATE, id);
+//        String path = userRootFolder + pathToParentFolder;
+//
+//        if (!isFolderExists(path)) {
+//            log.warn("The parent folder - {} does not exist", path);
+//            throw new FolderException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
+//        }
+//        log.warn("The parent folder - {} exists", path);
+//        return true;
+
+//    }
+
+//    public boolean isFolderAlreadyExists(String username, String mainPath) {
+//        Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
+//        User user = byUsernameIgnoreCase.get();
+//        int id = user.getId();
+//        String path = String.format(USER_ROOT_FOLDER_TEMPLATE, id);
+//        String bucket = path + mainPath;
+//
+//        if (isFolderExistsQQQQQQQ(bucket)) {
+//            log.warn("Folder - {} already exists", bucket);
+//            return true;
+////            throw new FolderException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
+//        }
+//        log.warn("Folder - {} does not exists", bucket);
+//        return false;
+//    }
+
+//    private boolean isExist(String bucket) {
+//        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
+//                .bucket(MAIN_BUCKET)
+//                .prefix(bucket)
+//                .recursive(false)
+//                .build());
+//        return results.iterator().hasNext();
+//    }
 
 }

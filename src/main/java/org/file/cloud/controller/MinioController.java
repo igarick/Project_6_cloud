@@ -55,20 +55,42 @@ public class MinioController {
             }
         }
 
-        // собрать родительский путь
-        StringBuilder parentPath = new StringBuilder();
-        if (pathSegments.length == 1) {
-//            parentPath = new StringBuilder(path);
-            parentPath = new StringBuilder();
-        } else if (pathSegments.length >= 2) {
-            String[] parentFolders = Arrays.copyOfRange(pathSegments, 0, pathSegments.length - 1);
-            for (String parentFolder : parentFolders) {
-                parentPath.append(parentFolder).append("/");
-            }
+        String s = path.replace("/", "");
+        if (s.length() >= 255) {
+            log.warn("Invalid or empty path segment to the new folder");
+            throw new InvalidOrEmptyPathToNewFolderException(ErrorInfo.CHARACTER_LIMIT_ERROR);
         }
-        log.info("Parent path = {}", parentPath);
 
-        boolean isParentFolderExists = minioService.checkParentFolderExists(userDetails.getUsername(), parentPath.toString());
+        minioService.validateFolderExists(userDetails.getUsername(), path);
+        minioService.createFolder(userDetails.getUsername(), path);
+
+        // собрать родительский путь
+//        StringBuilder parentPath = new StringBuilder();
+//        if (pathSegments.length == 1) {
+////            parentPath = new StringBuilder(path);
+//            parentPath = new StringBuilder();
+//        } else if (pathSegments.length >= 2) {
+//            String[] parentFolders = Arrays.copyOfRange(pathSegments, 0, pathSegments.length - 1);
+//            for (String parentFolder : parentFolders) {
+//                parentPath.append(parentFolder).append("/");
+//            }
+//        }
+//        log.info("Parent path = {}", parentPath);
+
+
+
+//        String parentPath;
+//        int lastSlash = path.lastIndexOf("/", path.length() - 2);
+//        if (lastSlash == -1) {
+//            parentPath = "";
+//        } else {
+//            parentPath = path.substring(0, lastSlash + 1);
+//        }
+//
+//        log.info("Parent path = {}", parentPath);
+
+//        boolean isParentFolderExists = minioService.checkParentFolderExists(userDetails.getUsername(), parentPath);
+
 //        boolean folderAlreadyExists = minioService.isFolderAlreadyExists(userDetails.getUsername(), path);
 //
 //        if (!folderAlreadyExists) {
