@@ -37,63 +37,48 @@ public class MinioController {
     @PostMapping("/api/directory")
     public void getInfoDirectory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
         // проверка на null, пустоту и отсутствие завершающего /
-        if (path == null || path.isEmpty() || !path.endsWith("/")) {
+        if (path == null || path.startsWith("/") || !path.endsWith("/") || path.contains("//")) {
+            log.warn("Invalid or empty path to the new folder");
             throw new InvalidOrEmptyPathToNewFolderException(ErrorInfo.INVALID_OR_EMPTY_PATH);
         }
         log.warn("PATH = [" + path + "]");
 
         // разбить путь
-        String[] folders = path.split("/");
+        String[] pathSegments = path.split("/");
 
         // проверка каждого сегмента
-        for (String folder : folders) {
-//            if (folder.isEmpty()) continue;
-            if (!folder.matches(VALID_FOLDER_NAME_PATTERN)) {
+        for (String segment : pathSegments) {
+            log.info("Path segment - {}", segment);
+            if (!segment.matches(VALID_FOLDER_NAME_PATTERN) || segment.isBlank()) {
+                log.warn("Invalid or empty path segment to the new folder");
                 throw new InvalidOrEmptyPathToNewFolderException(ErrorInfo.INVALID_OR_EMPTY_PATH);
-//                throw new FolderException(ErrorInfo.INVALID_FOLDER_NAME);
             }
         }
 
-        log.info(Arrays.toString(folders));
-
         // собрать родительский путь
         StringBuilder parentPath = new StringBuilder();
-        if (folders.length == 1) {
-            parentPath = new StringBuilder(path);
-        } else if (folders.length >= 2) {
-            String[] parentFolders = Arrays.copyOfRange(folders, 0, folders.length - 1);
+        if (pathSegments.length == 1) {
+//            parentPath = new StringBuilder(path);
+            parentPath = new StringBuilder();
+        } else if (pathSegments.length >= 2) {
+            String[] parentFolders = Arrays.copyOfRange(pathSegments, 0, pathSegments.length - 1);
             for (String parentFolder : parentFolders) {
                 parentPath.append(parentFolder).append("/");
             }
         }
         log.info("Parent path = {}", parentPath);
 
-        boolean isParentFolderExists = minioService.checkFolderExists(userDetails.getUsername(), parentPath.toString());
-        boolean folderAlreadyExists = minioService.isFolderAlreadyExists(userDetails.getUsername(), path);
-
-        if (folderAlreadyExists) {
-            throw new FolderException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
-        }
-
-        if (isParentFolderExists) {
-            minioService.createFolder(userDetails.getUsername(), path);
-        }
-
-
-//        for (String folder : folders) {
-//            if (folder.matches(FOLDER_NAME_PATTERN)) {
-//                throw new IncorrectOrEmptyPathToNewFolderException(ErrorInfo.INCORRECT_OR_EMPTY_PATH);
-//            }
-//        }
-
-//----------------------------------------
-//        if (path == null || path.isBlank() || !path.endsWith("/")) {
-//            throw new IncorrectOrEmptyPathToNewFolderException(ErrorInfo.INCORRECT_OR_EMPTY_PATH);
-//        }
+        boolean isParentFolderExists = minioService.checkParentFolderExists(userDetails.getUsername(), parentPath.toString());
+//        boolean folderAlreadyExists = minioService.isFolderAlreadyExists(userDetails.getUsername(), path);
 //
-// -------------------------- CREATE FOLDER-----------------------------
-//        minioService.createFolder(userDetails.getUsername(), path);
-//        System.out.println(path);
+//        if (!folderAlreadyExists) {
+//            throw new FolderException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
+//        }
+
+//        if (isParentFolderExists) {
+//            minioService.createFolder(userDetails.getUsername(), path);
+//        }
+
     }
 
 }

@@ -24,13 +24,13 @@ public class MinioService {
     private final UserRepository userRepository;
 
     private final String MAIN_BUCKET = "user-files";
-    private final String USER_FILES_BUCKET = "user-%s-files/";
+    private final String USER_HOME_PREFIX_PATTERN = "user-%s-files/";
 
     public void createFolder(String username, String mainPath) throws Exception {
         Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
         User user = byUsernameIgnoreCase.get();
         int id = user.getId();
-        String path = String.format(USER_FILES_BUCKET, id);
+        String path = String.format(USER_HOME_PREFIX_PATTERN, id);
         String bucket = path + mainPath;
 
         minioClient.putObject(
@@ -59,25 +59,25 @@ public class MinioService {
 //                        .build());
 //    }
 
-    public boolean checkFolderExists(String username, String mainPath) {
+    public boolean checkParentFolderExists(String username, String pathToParentFolder) {
         Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
         User user = byUsernameIgnoreCase.get();
         int id = user.getId();
-        String path = String.format(USER_FILES_BUCKET, id);
-        String bucket = path + mainPath;
+        String userHomePrefix = String.format(USER_HOME_PREFIX_PATTERN, id);
+        String path = userHomePrefix + pathToParentFolder;
 
-        if (!isFolderExists(bucket)) {
-            log.warn("The parent folder - {} does not exists", bucket);
+        if (!isFolderExists(path)) {
+            log.warn("The parent folder - {} does not exist", path);
             throw new FolderException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
         }
-        log.warn("The parent folder - {} exists", bucket);
+        log.warn("The parent folder - {} exists", path);
         return true;
     }
 
-    private boolean isFolderExists(String bucket) {
+    private boolean isFolderExists(String path) {
         Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
                 .bucket(MAIN_BUCKET)
-                .prefix(bucket)
+                .prefix(path)
                 .recursive(false)
                 .build());
         return results.iterator().hasNext();
@@ -87,7 +87,7 @@ public class MinioService {
         Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
         User user = byUsernameIgnoreCase.get();
         int id = user.getId();
-        String path = String.format(USER_FILES_BUCKET, id);
+        String path = String.format(USER_HOME_PREFIX_PATTERN, id);
         String bucket = path + mainPath;
 
         if (isExist(bucket)) {
