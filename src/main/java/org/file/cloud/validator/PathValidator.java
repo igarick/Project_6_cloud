@@ -11,17 +11,17 @@ public class PathValidator {
 
     public static boolean isValid(String path) {
         if (path == null || path.isBlank()) {
-            log.warn("Empty path to the new folder");
+            log.warn("Empty path");
             return false;
         }
 
         if (path.startsWith("/") || path.contains("//")) {
-            log.warn("Invalid path formate to the new folder");
+            log.warn("Invalid path formate");
             return false;
         }
 
         if (!isPathSegmentsValid(path)) {
-            log.warn("Invalid or empty path segment to the new folder");
+            log.warn("Invalid or empty path segment");
             return false;
         }
 
@@ -35,6 +35,7 @@ public class PathValidator {
     private static boolean isPathSegmentsValid(String path) {
         String[] pathSegments = path.split("/");
         for (String segment : pathSegments) {
+            log.info("Path segment - {}", segment);
             if (segment.isBlank() || !segment.matches(VALID_FOLDER_NAME_PATTERN)) {
                 return false;
             }

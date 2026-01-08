@@ -1,14 +1,17 @@
 package org.file.cloud.service;
 
 import io.minio.*;
+import io.minio.errors.*;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.dto.folder.ResourceDto;
 import org.file.cloud.exception.DaoException;
 import org.file.cloud.exception.ErrorInfo;
-import org.file.cloud.exception.folder.FolderException;
+import org.file.cloud.exception.folder.ResourceException;
 import org.file.cloud.model.User;
 import org.file.cloud.repository.UserRepository;
+import org.file.cloud.util.resource.ResourceType;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,20 +24,57 @@ public class MinioResourceService {
     private final String MAIN_BUCKET = "user-files";
     private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
 
-    public void getResource() throws Exception {
-        GetObjectAttributesResponse response =
-                minioClient.getObjectAttributes(
-                        GetObjectAttributesArgs.builder()
-                                .bucket(MAIN_BUCKET)
-                                .object("my-objectname")
-                                .objectAttributes(
-                                        new String[] {
-                                                "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
-                                        })
-                                .build());
+    public GetObjectAttributesResponse getResourceAttributes(String username, String resourcePath) throws Exception {
+        String userRootFolder = getUserRootFolder(username);
+        String fullPath = userRootFolder + resourcePath;
+
+        GetObjectAttributesResponse response;
+        try {
+            response = minioClient.getObjectAttributes(
+                    GetObjectAttributesArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .object(fullPath)
+                            .objectAttributes(
+                                    new String[]{
+                                            "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
+                                    })
+                            .build());
+        } catch (ErrorResponseException e) {
+            log.warn("Resource - {} not found", fullPath);
+            throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND, e);
+        }
+        return response;
     }
 
-    public void validateFolderExists(String username, String resourcePath) {
+    public ResourceDto getInfoToResponse(String username, String resourcePath) throws Exception {
+        String parentFolderPath = getParentFolderPath(resourcePath);
+        log.info("Path to JSON - {}", parentFolderPath);
+
+        String name;
+        if (parentFolderPath.isEmpty()) {
+            name = resourcePath.substring(0, resourcePath.length() - 1);
+        } else {
+            int length = parentFolderPath.length();
+            name = resourcePath.substring(length, resourcePath.length() - 1);
+        }
+        log.info("Name to JSON - {}", name);
+
+        Long size = null;
+        String type = ResourceType.DIRECTORY.name();
+        if (!resourcePath.endsWith("/")) {
+            GetObjectAttributesResponse resourceAttributes = getResourceAttributes(username, resourcePath);
+            size = resourceAttributes.result().objectSize();
+            type = ResourceType.FILE.name();
+        }
+        return ResourceDto.builder()
+                .path(parentFolderPath)
+                .name(name)
+                .size(size)
+                .type(type)
+                .build();
+    }
+
+    public void validateFolderExists(String username, String resourcePath) throws Exception {
         String userRootFolder = getUserRootFolder(username);
 //        String parentFolderPath = getParentFolderPath(resourcePath);
 //        String fullParentPath = userRootFolder + parentFolderPath;
@@ -46,13 +86,17 @@ public class MinioResourceService {
 //        }
 //        log.info("The parent folder - {} exists", fullParentPath);
 
-        if (!isResourceExists(fullPath)) {
-            log.warn("Resource - {} does not exists", fullPath);
-            throw new FolderException(ErrorInfo.RESOURCE_DOES_NOT_EXIST);
+        if (resourcePath.endsWith("/")) {
+            if (!isResourceExists(fullPath)) {
+                log.warn("Resource - {} not found", fullPath);
+                throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
+            }
+            log.info("Resource - {} exists", fullPath);
+        } else {
+            getResourceAttributes(username, resourcePath);
+            log.info("Resource - {} exists", fullPath);
         }
-        log.info("Folder - {} already exists", fullPath);
     }
-
 
 
     private String getParentFolderPath(String resourcePath) {

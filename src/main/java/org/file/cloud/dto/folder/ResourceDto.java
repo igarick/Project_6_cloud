@@ -1,12 +1,15 @@
 package org.file.cloud.dto.folder;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class EmptyFolderDto {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ResourceDto {
     private String path;
     private String name;
+    private Long size;
     private String type;
 }

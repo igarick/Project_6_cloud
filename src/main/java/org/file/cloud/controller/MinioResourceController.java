@@ -1,11 +1,15 @@
 package org.file.cloud.controller;
 
+import io.minio.GetObjectAttributesResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.dto.folder.ResourceDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.MinioResourceService;
 import org.file.cloud.validator.PathValidator;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,13 +23,18 @@ public class MinioResourceController {
     private final MinioResourceService minioResourceService;
 
     @GetMapping("/api/resource")
-    public void findFile(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
-        if (path.endsWith("/")) {
+    public ResponseEntity<ResourceDto> findFile(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
+        if (!PathValidator.isValid(path)) {
             log.warn("Invalid or empty path");
-            throw new InvalidOrEmptyPathException(ErrorInfo.RESOURCE_NOT_FOUND);
+            throw new InvalidOrEmptyPathException(ErrorInfo.FILE_PATH_ERROR);
         }
-        PathValidator.isValid(path);
 
+        minioResourceService.validateFolderExists(userDetails.getUsername(), path);
+        ResourceDto infoToResponse = minioResourceService.getInfoToResponse(userDetails.getUsername(), path);
+        return ResponseEntity.status(HttpStatus.OK).body(infoToResponse);
 
+//        GetObjectAttributesResponse resourceAttributes = minioResourceService.getResourceAttributes(userDetails.getUsername(), path);
+//        Long l = resourceAttributes.result().objectSize();
+//        log.info("Size = {}", l);
     }
 }

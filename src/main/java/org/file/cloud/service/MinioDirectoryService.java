@@ -7,17 +7,16 @@ import io.minio.Result;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.dto.folder.EmptyFolderDto;
+import org.file.cloud.dto.folder.ResourceDto;
 import org.file.cloud.exception.DaoException;
 import org.file.cloud.exception.ErrorInfo;
-import org.file.cloud.exception.folder.FolderException;
+import org.file.cloud.exception.folder.ResourceException;
 import org.file.cloud.model.User;
 import org.file.cloud.repository.UserRepository;
 import org.file.cloud.util.resource.ResourceType;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -30,7 +29,7 @@ public class MinioDirectoryService {
     private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
     private final String RESOURCE_TYPE = "DIRECTORY";
 
-    public EmptyFolderDto createFolder(String username, String resourcePath) throws Exception {
+    public ResourceDto createFolder(String username, String resourcePath) throws Exception {
         String userRootFolder = getUserRootFolder(username);
         String fullPath = userRootFolder + resourcePath;
         minioClient.putObject(
@@ -44,7 +43,7 @@ public class MinioDirectoryService {
         return getInfoToResponse(resourcePath);
     }
 
-    public EmptyFolderDto getInfoToResponse(String resourcePath) {
+    public ResourceDto getInfoToResponse(String resourcePath) {
         String parentFolderPath = getParentFolderPath(resourcePath);
         log.info("Path to JSON - {}", parentFolderPath);
 
@@ -56,7 +55,7 @@ public class MinioDirectoryService {
             name = resourcePath.substring(length, resourcePath.length() - 1);
         }
         log.info("Name to JSON - {}", name);
-        return EmptyFolderDto.builder()
+        return ResourceDto.builder()
                 .name(name)
                 .path(parentFolderPath)
                 .type(ResourceType.DIRECTORY.name())
@@ -73,13 +72,13 @@ public class MinioDirectoryService {
 
         if (!isFolderExists(fullParentPath)) {
             log.warn("Path to parent folder - {} does not exist", fullParentPath);
-            throw new FolderException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
+            throw new ResourceException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
         }
         log.info("The parent folder - {} exists", fullParentPath);
 
         if (isFolderExists(fullPath)) {
             log.warn("Folder - {} already exists", fullPath);
-            throw new FolderException(ErrorInfo.FOLDER_ALREADY_EXISTS);
+            throw new ResourceException(ErrorInfo.FOLDER_ALREADY_EXISTS);
         }
         log.info("Folder - {} does not exists", fullPath);
     }

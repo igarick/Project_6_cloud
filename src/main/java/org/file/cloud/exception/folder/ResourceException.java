@@ -3,12 +3,12 @@ package org.file.cloud.exception.folder;
 import org.file.cloud.exception.BaseException;
 import org.file.cloud.exception.ErrorInfo;
 
-public class FolderException extends BaseException {
-    public FolderException(ErrorInfo errorInfo) {
+public class ResourceException extends BaseException {
+    public ResourceException(ErrorInfo errorInfo) {
         super(errorInfo);
     }
 
-    public FolderException(ErrorInfo errorInfo, Throwable cause) {
+    public ResourceException(ErrorInfo errorInfo, Throwable cause) {
         super(errorInfo, cause);
     }
 }

@@ -25,16 +25,17 @@ public enum ErrorInfo {
 
     //validate path
     NEW_FOLDER_PATH_ERROR("Invalid or empty path to the new folder", SC_BAD_REQUEST),
-    CHARACTER_LIMIT_ERROR("Path exceeds maximum length", SC_BAD_REQUEST),
+    FILE_PATH_ERROR("Invalid or empty path", SC_BAD_REQUEST),
+//    CHARACTER_LIMIT_ERROR("Path exceeds maximum length", SC_BAD_REQUEST),
 
 
     // folder
     PARENT_FOLDER_DOES_NOT_EXIST("The parent folder does not exist", SC_NOT_FOUND),
-    INVALID_FOLDER_NAME("Name must not contain symbols: \\ / : * ?  < > |", SC_BAD_REQUEST),
+//    INVALID_FOLDER_NAME("Name must not contain symbols: \\ / : * ?  < > |", SC_BAD_REQUEST),
     FOLDER_ALREADY_EXISTS("Folder already exists", SC_CONFLICT),
 
     // resource
-    RESOURCE_DOES_NOT_EXIST("Resource does not exist", SC_NOT_FOUND),
+//    RESOURCE_NOT_FOUND("Resource does not exist", SC_NOT_FOUND),
 
 
     // file
