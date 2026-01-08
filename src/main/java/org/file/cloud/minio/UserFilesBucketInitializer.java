@@ -14,17 +14,16 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserFilesBucketInitializer {
     private final MinioClient minioClient;
+    private final String BUCKET = "user-files";
 
     @EventListener(ApplicationReadyEvent.class)
     public void createBucketIfNotExists() throws Exception {
-        String bucket = "user-files";
-
         if (!minioClient.bucketExists(BucketExistsArgs.builder()
-                .bucket(bucket)
+                .bucket(BUCKET)
                 .build())) {
-            log.info("Creating bucket - {}", bucket);
+            log.info("Creating bucket - {}", BUCKET);
             minioClient.makeBucket(MakeBucketArgs.builder()
-                    .bucket(bucket)
+                    .bucket(BUCKET)
                     .build());
         }
     }

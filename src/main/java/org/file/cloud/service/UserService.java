@@ -45,6 +45,7 @@ public class UserService {
             throw new DuplicateUserException(ErrorInfo.USERNAME_DUPLICATE_ERROR, e);
         }
         log.info("User = {} saved", userSignUpDto.getUsername());
+
         return UsernameDto.builder()
                 .username(user.getUsername())
                 .build();

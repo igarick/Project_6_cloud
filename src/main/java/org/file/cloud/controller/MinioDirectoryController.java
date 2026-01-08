@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.folder.EmptyFolderDto;
 import org.file.cloud.exception.ErrorInfo;
-import org.file.cloud.exception.folder.FolderException;
-import org.file.cloud.exception.path.InvalidOrEmptyPathToNewFolderException;
-import org.file.cloud.service.MinioService;
+import org.file.cloud.exception.path.InvalidOrEmptyPathException;
+import org.file.cloud.service.MinioDirectoryService;
+import org.file.cloud.validator.PathValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,21 +16,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
-
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class MinioController {
-    private final MinioService minioService;
-
+public class MinioDirectoryController {
+    private final MinioDirectoryService minioDirectoryService;
 
     private final String VALID_FOLDER_NAME_PATTERN = "^[^\\\\/:*?\"<>|]+$";
 
-    @GetMapping("/api/resource")
-    public void getInfo(@RequestParam String path) {
-        System.out.println(path);
-    }
 
     @GetMapping("/api/directory")
     public void showFolderContents(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
@@ -39,35 +32,12 @@ public class MinioController {
 
     @PostMapping("/api/directory")
     public ResponseEntity<EmptyFolderDto> getInfoDirectory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
-        // проверка на null, пустоту и отсутствие завершающего /
-        if (path == null || path.startsWith("/") || !path.endsWith("/") || path.contains("//")) {
-            log.warn("Invalid or empty path to the new folder");
-            throw new InvalidOrEmptyPathToNewFolderException(ErrorInfo.INVALID_OR_EMPTY_PATH);
+        if (!path.endsWith("/") || !PathValidator.isValid(path)) {
+            throw new InvalidOrEmptyPathException(ErrorInfo.NEW_FOLDER_PATH_ERROR);
         }
-        log.warn("PATH = [" + path + "]");
-
-        // разбить путь
-        String[] pathSegments = path.split("/");
-
-        // проверка каждого сегмента
-        for (String segment : pathSegments) {
-            log.info("Path segment - {}", segment);
-            if (!segment.matches(VALID_FOLDER_NAME_PATTERN) || segment.isBlank()) {
-                log.warn("Invalid or empty path segment to the new folder");
-                throw new InvalidOrEmptyPathToNewFolderException(ErrorInfo.INVALID_OR_EMPTY_PATH);
-            }
-        }
-
-        String s = path.replace("/", "");
-        if (s.length() >= 255) {
-            log.warn("Invalid or empty path segment to the new folder");
-            throw new InvalidOrEmptyPathToNewFolderException(ErrorInfo.CHARACTER_LIMIT_ERROR);
-        }
-
-        minioService.validateFolderExists(userDetails.getUsername(), path);
-//        minioService.createFolder(userDetails.getUsername(), path);
-        EmptyFolderDto infoToResponse = minioService.getInfoToResponse(userDetails.getUsername(), path);
-        return ResponseEntity.status(HttpStatus.CREATED).body(infoToResponse);
+        minioDirectoryService.validateFolderExists(userDetails.getUsername(), path);
+        EmptyFolderDto folderDto = minioDirectoryService.createFolder(userDetails.getUsername(), path);
+        return ResponseEntity.status(HttpStatus.CREATED).body(folderDto);
 
         // собрать родительский путь
 //        StringBuilder parentPath = new StringBuilder();

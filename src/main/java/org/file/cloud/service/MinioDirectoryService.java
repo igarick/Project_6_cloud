@@ -8,10 +8,12 @@ import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.folder.EmptyFolderDto;
+import org.file.cloud.exception.DaoException;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.FolderException;
 import org.file.cloud.model.User;
 import org.file.cloud.repository.UserRepository;
+import org.file.cloud.util.resource.ResourceType;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -20,7 +22,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MinioService {
+public class MinioDirectoryService {
     private final MinioClient minioClient;
     private final UserRepository userRepository;
 
@@ -28,7 +30,7 @@ public class MinioService {
     private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
     private final String RESOURCE_TYPE = "DIRECTORY";
 
-    public void createFolder(String username, String resourcePath) throws Exception {
+    public EmptyFolderDto createFolder(String username, String resourcePath) throws Exception {
         String userRootFolder = getUserRootFolder(username);
         String fullPath = userRootFolder + resourcePath;
         minioClient.putObject(
@@ -39,26 +41,12 @@ public class MinioService {
                         .build());
         log.info("Folder - {} was created", resourcePath);
 
+        return getInfoToResponse(resourcePath);
     }
 
-//    {
-//        "path": "folder1/folder2/", // путь к папке, в которой лежит ресурс
-//            "name": "folder3",
-//            "type": "DIRECTORY"
-//    }
-
-
-//              getParentFolderPath()
-    // if "path": ""
-    // "name": = resourcePath
-
-    // if "path": "test/"
-    // "name": -  взять ТЕСТ/ - стринг.длина
-    // из resourcePath вычесть resourcePath
-
-    public EmptyFolderDto getInfoToResponse(String username, String resourcePath) {
+    public EmptyFolderDto getInfoToResponse(String resourcePath) {
         String parentFolderPath = getParentFolderPath(resourcePath);
-        log. info("=================" + parentFolderPath);
+        log.info("Path to JSON - {}", parentFolderPath);
 
         String name;
         if (parentFolderPath.isEmpty()) {
@@ -67,14 +55,13 @@ public class MinioService {
             int length = parentFolderPath.length();
             name = resourcePath.substring(length, resourcePath.length() - 1);
         }
-        log.info("======================" + name);
+        log.info("Name to JSON - {}", name);
         return EmptyFolderDto.builder()
                 .name(name)
                 .path(parentFolderPath)
-                .type(RESOURCE_TYPE)
+                .type(ResourceType.DIRECTORY.name())
                 .build();
     }
-
 
 
     public void validateFolderExists(String username, String resourcePath) {
@@ -95,7 +82,6 @@ public class MinioService {
             throw new FolderException(ErrorInfo.FOLDER_ALREADY_EXISTS);
         }
         log.info("Folder - {} does not exists", fullPath);
-        getInfoToResponse(username, resourcePath);
     }
 
     private String getParentFolderPath(String resourcePath) {
@@ -111,8 +97,13 @@ public class MinioService {
     }
 
     private String getUserRootFolder(String username) {
-        Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
-        User user = byUsernameIgnoreCase.get();
+//        Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
+//        User user = byUsernameIgnoreCase.get();
+
+        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
+            log.warn("User - {} not found", username);
+            return new DaoException(ErrorInfo.USER_NOT_FOUND);
+        });
         int id = user.getId();
         return String.format(USER_ROOT_FOLDER_TEMPLATE, id);
     }

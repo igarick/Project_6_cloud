@@ -21,10 +21,10 @@ public enum ErrorInfo {
     DATA_FETCH_ERROR("Data fetch error", SC_INTERNAL_SERVER_ERROR),
 
 
-    USER_NOT_FOUND("User with this name was not found", SC_NOT_FOUND),
+    USER_NOT_FOUND("User with this name not found", SC_NOT_FOUND),
 
     //validate path
-    INVALID_OR_EMPTY_PATH("Invalid or empty path to the new folder", SC_BAD_REQUEST),
+    NEW_FOLDER_PATH_ERROR("Invalid or empty path to the new folder", SC_BAD_REQUEST),
     CHARACTER_LIMIT_ERROR("Path exceeds maximum length", SC_BAD_REQUEST),
 
 
@@ -32,6 +32,15 @@ public enum ErrorInfo {
     PARENT_FOLDER_DOES_NOT_EXIST("The parent folder does not exist", SC_NOT_FOUND),
     INVALID_FOLDER_NAME("Name must not contain symbols: \\ / : * ?  < > |", SC_BAD_REQUEST),
     FOLDER_ALREADY_EXISTS("Folder already exists", SC_CONFLICT),
+
+    // resource
+    RESOURCE_DOES_NOT_EXIST("Resource does not exist", SC_NOT_FOUND),
+
+
+    // file
+    RESOURCE_NOT_FOUND("Resource not found", SC_NOT_FOUND),
+
+
 
 
 
