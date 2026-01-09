@@ -7,7 +7,7 @@ import io.minio.Result;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.dto.folder.ResourceDto;
+import org.file.cloud.dto.folder.ResourceResponseDto;
 import org.file.cloud.exception.DaoException;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
@@ -29,7 +29,7 @@ public class MinioDirectoryService {
     private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
     private final String RESOURCE_TYPE = "DIRECTORY";
 
-    public ResourceDto createFolder(String username, String resourcePath) throws Exception {
+    public ResourceResponseDto createFolder(String username, String resourcePath) throws Exception {
         String userRootFolder = getUserRootFolder(username);
         String fullPath = userRootFolder + resourcePath;
         minioClient.putObject(
@@ -43,7 +43,7 @@ public class MinioDirectoryService {
         return getInfoToResponse(resourcePath);
     }
 
-    public ResourceDto getInfoToResponse(String resourcePath) {
+    public ResourceResponseDto getInfoToResponse(String resourcePath) {
         String parentFolderPath = getParentFolderPath(resourcePath);
         log.info("Path to JSON - {}", parentFolderPath);
 
@@ -55,7 +55,7 @@ public class MinioDirectoryService {
             name = resourcePath.substring(length, resourcePath.length() - 1);
         }
         log.info("Name to JSON - {}", name);
-        return ResourceDto.builder()
+        return ResourceResponseDto.builder()
                 .name(name)
                 .path(parentFolderPath)
                 .type(ResourceType.DIRECTORY.name())

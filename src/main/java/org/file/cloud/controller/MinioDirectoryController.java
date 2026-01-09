@@ -2,7 +2,7 @@ package org.file.cloud.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.dto.folder.ResourceDto;
+import org.file.cloud.dto.folder.ResourceResponseDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.MinioDirectoryService;
@@ -31,12 +31,12 @@ public class MinioDirectoryController {
     }
 
     @PostMapping("/api/directory")
-    public ResponseEntity<ResourceDto> getInfoDirectory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
+    public ResponseEntity<ResourceResponseDto> getInfoDirectory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
         if (!path.endsWith("/") || !PathValidator.isValid(path)) {
             throw new InvalidOrEmptyPathException(ErrorInfo.NEW_FOLDER_PATH_ERROR);
         }
         minioDirectoryService.validateFolderExists(userDetails.getUsername(), path);
-        ResourceDto folderDto = minioDirectoryService.createFolder(userDetails.getUsername(), path);
+        ResourceResponseDto folderDto = minioDirectoryService.createFolder(userDetails.getUsername(), path);
         return ResponseEntity.status(HttpStatus.CREATED).body(folderDto);
 
         // собрать родительский путь
