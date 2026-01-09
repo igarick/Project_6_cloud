@@ -54,10 +54,10 @@ public class MinioDirectoryService {
             int length = parentFolderPath.length();
             name = resourcePath.substring(length, resourcePath.length() - 1);
         }
-        log.info("Name to JSON - {}", name);
+        log.info("Collected DTO: path - {}, name - {}, type - {}", parentFolderPath, name, ResourceType.DIRECTORY.name());
         return ResourceResponseDto.builder()
-                .name(name)
                 .path(parentFolderPath)
+                .name(name)
                 .type(ResourceType.DIRECTORY.name())
                 .build();
     }

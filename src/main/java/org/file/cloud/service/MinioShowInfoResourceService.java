@@ -37,13 +37,13 @@ public class MinioShowInfoResourceService {
         String fullPath = userRootFolder + resourcePath;
         if (resourcePath.endsWith("/")) {
             if (!isFolderExists(fullPath)) {
-                log.warn("Resource - {} not found", fullPath);
+                log.warn("Resource (FOLDER) - {} not found", fullPath);
                 throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
             }
-            log.info("Resource - {} exists", fullPath);
+            log.info("Resource (FOLDER) - {} exists", fullPath);
         } else {
             getResourceAttributes(username, resourcePath);
-            log.info("Resource - {} exists", fullPath);
+            log.info("Resource (FILE) - {} exists", fullPath);
         }
     }
 
@@ -140,7 +140,7 @@ public class MinioShowInfoResourceService {
     private void handleErrorResponseException(ErrorResponseException e, String fullPath) {
         String code = e.errorResponse().code();
         if ("NoSuchKey".equals(code)) {
-            log.warn("Resource - {} not found. ", fullPath);
+            log.warn("Resource (FILE) - {} not found. ", fullPath);
             throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
         }
         log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
