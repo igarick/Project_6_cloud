@@ -2,38 +2,35 @@ package org.file.cloud.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.dto.folder.ResourceResponseDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.MinioShowInfoResourceService;
 import org.file.cloud.validator.PathValidator;
+import org.file.cloud.validator.RequestValidator;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class MinioResourceController {
+public class MinioDeleteResourceController {
     private final MinioShowInfoResourceService minioShowInfoResourceService;
 
-    @GetMapping("/api/resource")
-    public ResponseEntity<ResourceResponseDto> findFile(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
+    @DeleteMapping("/api/resource")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
         if (!PathValidator.isValid(path)) {
             log.warn("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
 
         minioShowInfoResourceService.validateResourceExists(userDetails.getUsername(), path);
-        ResourceResponseDto infoToResponse = minioShowInfoResourceService.buildDtoToResponse(userDetails.getUsername(), path);
-        return ResponseEntity.status(HttpStatus.OK).body(infoToResponse);
-
-//        GetObjectAttributesResponse resourceAttributes = minioResourceService.getResourceAttributes(userDetails.getUsername(), path);
-//        Long l = resourceAttributes.result().objectSize();
-//        log.info("Size = {}", l);
+        minioShowInfoResourceService.deleteResource(userDetails.getUsername(), path);
+        log.info("Resource - {} deleted", path);
     }
 }

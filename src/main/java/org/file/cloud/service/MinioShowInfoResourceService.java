@@ -2,6 +2,8 @@ package org.file.cloud.service;
 
 import io.minio.*;
 import io.minio.errors.ErrorResponseException;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,19 +16,23 @@ import org.file.cloud.repository.UserRepository;
 import org.file.cloud.util.resource.ResourceType;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class MinioResourceService {
+public class MinioShowInfoResourceService {
     private final UserRepository userRepository;
     private final MinioClient minioClient;
 
     private final String MAIN_BUCKET = "user-files";
     private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
 
-    public void validateResourceExists(String username, String resourcePath) throws Exception {
+    public void validateResourceExists(String username, String resourcePath) {
         String userRootFolder = getUserRootFolder(username);
         String fullPath = userRootFolder + resourcePath;
         if (resourcePath.endsWith("/")) {
@@ -100,14 +106,14 @@ public class MinioResourceService {
         return name;
     }
 
-    private Long getFileSize(String username, String resourcePath) throws Exception {
+    private Long getFileSize(String username, String resourcePath) {
         GetObjectAttributesResponse resourceAttributes = getResourceAttributes(username, resourcePath);
         Long objectSize = resourceAttributes.result().objectSize();
         log.info("File size = {}", objectSize);
         return Objects.requireNonNullElse(objectSize, 0L);
     }
 
-    public GetObjectAttributesResponse getResourceAttributes(String username, String resourcePath) throws Exception {
+    public GetObjectAttributesResponse getResourceAttributes(String username, String resourcePath) {
         String userRootFolder = getUserRootFolder(username);
         String fullPath = userRootFolder + resourcePath;
 
@@ -157,5 +163,82 @@ public class MinioResourceService {
                 .recursive(false)
                 .build());
         return results.iterator().hasNext();
+    }
+
+    public void deleteResource(String username, String resourcePath) {
+        String userRootFolder = getUserRootFolder(username);
+        String fullPath = userRootFolder + resourcePath;
+
+        if (resourcePath.endsWith("/")) {
+            deleteFolder(fullPath);
+        } else {
+            deleteFile(fullPath);
+        }
+    }
+
+    public void deleteFile(String fullPath) {
+//        String userRootFolder = getUserRootFolder(username);
+//        String fullPath = userRootFolder + resourcePath;
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .object(fullPath)
+                            .build());
+
+        } catch (Exception e) {
+            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+        }
+    }
+
+    public void deleteFolder(String fullPath) {
+//        String userRootFolder = getUserRootFolder(username);
+//        String fullPath = userRootFolder + resourcePath;
+        try {
+            Iterable<Result<Item>> results = minioClient.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .prefix(fullPath)
+                            .recursive(true)
+                            .build());
+
+            List<DeleteObject> objects = new LinkedList<>();
+            for (Result<Item> result : results) {
+                Item item = result.get();
+                String objectName = item.objectName();
+                objects.add(new DeleteObject(objectName));
+                log.info("Marked for deletion: {}", objectName);
+            }
+
+            Iterable<Result<DeleteError>> removed =
+                    minioClient.removeObjects(
+                            RemoveObjectsArgs.builder()
+                                    .bucket(MAIN_BUCKET)
+                                    .objects(objects)
+                                    .build());
+            for (Result<DeleteError> result : removed) {
+                DeleteError error = result.get();
+                log.warn("Error in deleting object {}; {}", error.objectName(), error.message());
+            }
+        } catch (Exception e) {
+            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+        }
+    }
+
+    public InputStream downloadFile(String username, String resourcePath) {
+        String userRootFolder = getUserRootFolder(username);
+        String fullPath = userRootFolder + resourcePath;
+        try {
+            return minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .object(fullPath)
+                            .build());
+        } catch (Exception e) {
+            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+        }
     }
 }
