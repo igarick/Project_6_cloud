@@ -1,8 +1,6 @@
 package org.file.cloud.service;
 
 import io.minio.*;
-import io.minio.messages.DeleteError;
-import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,8 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -48,26 +44,30 @@ public class MinioDownloadFolderService {
 
                 // определяю имя для зип файла
                 String objectName = item.objectName();
+                log.info("objectName: {}", objectName);
                 String zipEntryName = objectName.substring(fullPath.length());
-                log.info("Zip Entry name: {} ", zipEntryName);
+                log.info("Adding zip Entry name: {} ", zipEntryName);
 
                 // записываю энтри в зип поток
                 zipOutputStream.putNextEntry(new ZipEntry(zipEntryName));
 
                 // получаю каждый объект в виде потока и передаю в зип поток
-                try (InputStream stream = minioClient.getObject(
-                        GetObjectArgs.builder()
-                                .bucket(MAIN_BUCKET)
-                                .object(objectName)
-                                .build())) {
+                try (
+//                        InputStream stream = minioClient.getObject(
+//                        GetObjectArgs.builder()
+//                                .bucket(MAIN_BUCKET)
+//                                .object(objectName)
+//                                .build())
+                        InputStream stream = minioShowInfoResourceService.getObjectStream(objectName);
+                ) {
                     stream.transferTo(zipOutputStream);
                 }
                 zipOutputStream.closeEntry();
-                log.info("Stream for Entry - {} closed", objectName);
             }
             zipOutputStream.finish();
+            log.info("ZIP completed");
         } catch (Exception e) {
-            log.error("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            log.error("Failed to ZIP folder - {}. Error: {}", fullPath, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
         }
     }

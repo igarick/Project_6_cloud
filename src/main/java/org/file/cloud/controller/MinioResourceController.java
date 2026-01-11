@@ -8,7 +8,6 @@ import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.MinioDownloadFolderService;
 import org.file.cloud.service.MinioShowInfoResourceService;
 import org.file.cloud.validator.PathValidator;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -38,14 +37,14 @@ public class MinioResourceController {
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
 
-        minioShowInfoResourceService.validateResourceExists(userDetails.getUsername(), path);
+        minioShowInfoResourceService.checkResourceExists(userDetails.getUsername(), path);
         ResourceResponseDto infoToResponse = minioShowInfoResourceService.buildDtoToResponse(userDetails.getUsername(), path);
         return ResponseEntity.status(HttpStatus.OK).body(infoToResponse);
     }
 
     @GetMapping("api/resource/download")
     public ResponseEntity<StreamingResponseBody> downloadResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
-        minioShowInfoResourceService.validateResourceExists(userDetails.getUsername(), path);
+        minioShowInfoResourceService.checkResourceExists(userDetails.getUsername(), path);
 
         Path fileName = Paths.get(path).getFileName();
         String contentDisposition;
@@ -58,8 +57,15 @@ public class MinioResourceController {
 //            log.info("File - {} was downloaded", path);
 
 
+//            StreamingResponseBody streamingResponseBody = outputStream -> {
+//                try (InputStream stream = minioShowInfoResourceService.getFileStream(userDetails.getUsername(), path)) {
+//                    stream.transferTo(outputStream);
+//                }
+//            };
+
+
             StreamingResponseBody streamingResponseBody = outputStream -> {
-                try (InputStream stream = minioShowInfoResourceService.downloadFile(userDetails.getUsername(), path)) {
+                try (InputStream stream = minioShowInfoResourceService.getFileStream(userDetails.getUsername(), path)) {
                     stream.transferTo(outputStream);
                 }
             };

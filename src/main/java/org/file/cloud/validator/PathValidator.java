@@ -10,7 +10,7 @@ public class PathValidator {
     private static final int MAX_PATH_LENGTH = 255;
 
     public static boolean isValid(String path) {
-        log.info("Validation the path - {}", path);
+        log.info("Start validation the path - {}", path);
         if (path == null || path.isBlank()) {
             log.warn("Empty path");
             return false;

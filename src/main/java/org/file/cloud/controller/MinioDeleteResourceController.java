@@ -6,7 +6,6 @@ import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.MinioShowInfoResourceService;
 import org.file.cloud.validator.PathValidator;
-import org.file.cloud.validator.RequestValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,7 +28,7 @@ public class MinioDeleteResourceController {
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
 
-        minioShowInfoResourceService.validateResourceExists(userDetails.getUsername(), path);
+        minioShowInfoResourceService.checkResourceExists(userDetails.getUsername(), path);
         minioShowInfoResourceService.deleteResource(userDetails.getUsername(), path);
         log.info("Resource - {} deleted", path);
     }
