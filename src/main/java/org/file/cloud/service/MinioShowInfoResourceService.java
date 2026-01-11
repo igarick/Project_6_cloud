@@ -147,7 +147,7 @@ public class MinioShowInfoResourceService {
         throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
     }
 
-    private String getUserRootFolder(String username) {
+    public String getUserRootFolder(String username) {
         User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
             log.warn("User - {} not found", username);
             return new DaoException(ErrorInfo.USER_NOT_FOUND);
