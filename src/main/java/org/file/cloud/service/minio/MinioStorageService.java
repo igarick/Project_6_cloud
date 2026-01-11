@@ -1,0 +1,82 @@
+package org.file.cloud.service.minio;
+
+import io.minio.*;
+import io.minio.errors.ErrorResponseException;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
+import io.minio.messages.Item;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.exception.ErrorInfo;
+import org.file.cloud.exception.folder.ResourceException;
+import org.springframework.stereotype.Service;
+
+import java.io.InputStream;
+import java.util.List;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class MinioStorageService {
+    private final MinioClient minioClient;
+
+    private final String MAIN_BUCKET = "user-files";
+
+    public boolean isFolderExists(String path) {
+        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
+                .bucket(MAIN_BUCKET)
+                .prefix(path)
+                .recursive(false)
+                .build());
+        return results.iterator().hasNext();
+    }
+
+    public InputStream getObjectStream(String fullPath) {
+        log.info("fullPath from getFileStream: {}", fullPath);
+        try {
+            return minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .object(fullPath)
+                            .build());
+        } catch (Exception e) {
+            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+        }
+    }
+
+    public void removeObjects(List<DeleteObject> objects) {
+        Iterable<Result<DeleteError>> removed =
+                minioClient.removeObjects(
+                        RemoveObjectsArgs.builder()
+                                .bucket(MAIN_BUCKET)
+                                .objects(objects)
+                                .build());
+    }
+
+    public boolean isFileExists(String fullPath) {
+        try {
+            minioClient.statObject(
+                    StatObjectArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .object(fullPath)
+                            .build());
+        } catch (ErrorResponseException e) {
+            handleErrorResponseException(e, fullPath);
+        } catch (Exception e) {
+            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+        }
+        return true;
+    }
+
+    private void handleErrorResponseException(ErrorResponseException e, String fullPath) {
+        String code = e.errorResponse().code();
+        if ("NoSuchKey".equals(code)) {
+            log.warn("Resource (FILE) - {} not found. ", fullPath);
+            throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
+        }
+        log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+        throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+    }
+}

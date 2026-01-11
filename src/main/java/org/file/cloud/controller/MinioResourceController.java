@@ -48,44 +48,25 @@ public class MinioResourceController {
 
         Path fileName = Paths.get(path).getFileName();
         String contentDisposition;
+//        StreamingResponseBody streamingResponseBody = null;
 
         if (!path.endsWith("/")) {
-//            Path fileName = Paths.get(path).getFileName();
             contentDisposition = String.format("attachment; filename=\"%s\"", fileName);
-
-//            InputStream stream = minioShowInfoResourceService.downloadFile(userDetails.getUsername(), path);
+//
+//            streamingResponseBody = minioShowInfoResourceService.getFileStream(userDetails.getUsername(), path);
+//
 //            log.info("File - {} was downloaded", path);
-
-
-//            StreamingResponseBody streamingResponseBody = outputStream -> {
-//                try (InputStream stream = minioShowInfoResourceService.getFileStream(userDetails.getUsername(), path)) {
-//                    stream.transferTo(outputStream);
-//                }
+        } else {
+            contentDisposition = String.format("attachment; filename=\"%s.zip\"", fileName);
+//
+//            streamingResponseBody = outputStream -> {
+//                minioDownloadFolderService.downloadFolder(userDetails.getUsername(), path, outputStream);
 //            };
+//
+//            log.info("Folder - {} was downloaded", path);
 
-
-            StreamingResponseBody streamingResponseBody = outputStream -> {
-                try (InputStream stream = minioShowInfoResourceService.getFileStream(userDetails.getUsername(), path)) {
-                    stream.transferTo(outputStream);
-                }
-            };
-
-            log.info("File - {} was downloaded", path);
-
-
-            return ResponseEntity.status(HttpStatus.OK)
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
-                    .body(streamingResponseBody);
-//                    .body(new InputStreamResource(stream));
-        }
-//        Path fileName = Paths.get(path).getFileName();
-        contentDisposition = String.format("attachment; filename=\"%s.zip\"", fileName);
-
-        StreamingResponseBody streamingResponseBody = outputStream -> {
-            minioDownloadFolderService.downloadFolder(userDetails.getUsername(), path, outputStream);
-        };
-        log.info("Folder - {} was downloaded", path);
+    }
+        StreamingResponseBody streamingResponseBody = minioShowInfoResourceService.getFileStream(userDetails.getUsername(), path);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)

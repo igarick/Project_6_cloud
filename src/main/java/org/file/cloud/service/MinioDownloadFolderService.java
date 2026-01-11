@@ -1,11 +1,14 @@
 package org.file.cloud.service;
 
-import io.minio.*;
+import io.minio.ListObjectsArgs;
+import io.minio.MinioClient;
+import io.minio.Result;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
+import org.file.cloud.service.minio.MinioStorageService;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -17,15 +20,18 @@ import java.util.zip.ZipOutputStream;
 @Service
 @RequiredArgsConstructor
 public class MinioDownloadFolderService {
-    private final MinioShowInfoResourceService minioShowInfoResourceService;
     private final MinioClient minioClient;
+    private final MinioStorageService minioStorageService;
 
     private final String MAIN_BUCKET = "user-files";
     private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
 
-    public void downloadFolder(String username, String resourcePath,OutputStream outputStream) {
-        String userRootFolder = minioShowInfoResourceService.getUserRootFolder(username);
-        String fullPath = userRootFolder + resourcePath;
+//    public void downloadFolder(String username, String resourcePath, OutputStream outputStream) {
+        public void downloadFolder(String fullPath, OutputStream outputStream) {
+
+//        String fullPath = userRootFolder + resourcePath;
+
+
         // если заканчивается на "/"
         // получаю список объектов внутри папки
         try {
@@ -58,7 +64,7 @@ public class MinioDownloadFolderService {
 //                                .bucket(MAIN_BUCKET)
 //                                .object(objectName)
 //                                .build())
-                        InputStream stream = minioShowInfoResourceService.getObjectStream(objectName);
+                        InputStream stream = minioStorageService.getObjectStream(objectName);
                 ) {
                     stream.transferTo(zipOutputStream);
                 }

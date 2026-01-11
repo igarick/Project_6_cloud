@@ -1,7 +1,7 @@
 package org.file.cloud.service;
 
 import io.minio.*;
-import io.minio.errors.*;
+import io.minio.errors.ErrorResponseException;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
@@ -13,8 +13,10 @@ import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
 import org.file.cloud.model.User;
 import org.file.cloud.repository.UserRepository;
+import org.file.cloud.service.minio.MinioStorageService;
 import org.file.cloud.util.resource.ResourceType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.InputStream;
 import java.util.LinkedList;
@@ -27,32 +29,28 @@ import java.util.Objects;
 public class MinioShowInfoResourceService {
     private final UserRepository userRepository;
     private final MinioClient minioClient;
+    private final MinioDownloadFolderService minioDownloadFolderService;
+    private final MinioStorageService minioStorageService;
 
     private final String MAIN_BUCKET = "user-files";
     private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
 
     public void checkResourceExists(String username, String resourcePath) {
-//        String userRootFolder = getUserRootFolder(username);
-//        String fullPath = userRootFolder + resourcePath;
         String fullPath = getFullPath(username, resourcePath);
         if (resourcePath.endsWith("/")) {
-            if (!isFolderExists(fullPath)) {
+            if (!minioStorageService.isFolderExists(fullPath)) {
                 log.warn("Resource (FOLDER) - {} not found", fullPath);
                 throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
             }
             log.info("Resource (FOLDER) - {} exists", fullPath);
         } else {
-            if (isFileExists(fullPath)) {
+            if (minioStorageService.isFileExists(fullPath)) {
                 log.info("Resource (FILE) - {} exists", fullPath);
             }
-
-
-//            getResourceAttributes(username, resourcePath);
-//            log.info("Resource (FILE) - {} exists", fullPath);
         }
     }
 
-    public ResourceResponseDto buildDtoToResponse(String username, String resourcePath) throws Exception {
+    public ResourceResponseDto buildDtoToResponse(String username, String resourcePath) {
         String parentFolderPath = getParentFolderPath(resourcePath);
         String name;
         Long size = null;
@@ -112,19 +110,25 @@ public class MinioShowInfoResourceService {
     }
 
     private Long getFileSize(String username, String resourcePath) {
-        GetObjectAttributesResponse resourceAttributes = getResourceAttributes(username, resourcePath);
+        String fullPath = getFullPath(username, resourcePath);
+
+//        GetObjectAttributesResponse resourceAttributes = getResourceAttributes(username, resourcePath);
+        GetObjectAttributesResponse resourceAttributes = getResourceAttributes(fullPath);
         Long objectSize = resourceAttributes.result().objectSize();
         log.info("File size = {}", objectSize);
         return Objects.requireNonNullElse(objectSize, 0L);
     }
 
-    public GetObjectAttributesResponse getResourceAttributes(String username, String resourcePath) {
-        String userRootFolder = getUserRootFolder(username);
-        String fullPath = userRootFolder + resourcePath;
+//    public GetObjectAttributesResponse getResourceAttributes(String username, String resourcePath) {
+    public GetObjectAttributesResponse getResourceAttributes(String fullPath) {
+//        String userRootFolder = getUserRootFolder(username);
+//        String fullPath = userRootFolder + resourcePath;
 
         GetObjectAttributesResponse response = null;
+
         try {
             response = minioClient.getObjectAttributes(
+//           return minioClient.getObjectAttributes(
                     GetObjectAttributesArgs.builder()
                             .bucket(MAIN_BUCKET)
                             .object(fullPath)
@@ -143,23 +147,6 @@ public class MinioShowInfoResourceService {
     }
 
 
-    public boolean isFileExists(String fullPath) {
-        try {
-            minioClient.statObject(
-                    StatObjectArgs.builder()
-                            .bucket(MAIN_BUCKET)
-                            .object(fullPath)
-                            .build());
-        } catch (ErrorResponseException e) {
-            handleErrorResponseException(e, fullPath);
-        } catch (Exception e) {
-            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
-        }
-        return true;
-    }
-
-
     private void handleErrorResponseException(ErrorResponseException e, String fullPath) {
         String code = e.errorResponse().code();
         if ("NoSuchKey".equals(code)) {
@@ -170,24 +157,14 @@ public class MinioShowInfoResourceService {
         throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
     }
 
-
-    public String getUserRootFolder(String username) {
-        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
-            log.warn("User - {} not found", username);
-            return new DaoException(ErrorInfo.USER_NOT_FOUND);
-        });
-        int id = user.getId();
-        return String.format(USER_ROOT_FOLDER_TEMPLATE, id);
-    }
-
-    private boolean isFolderExists(String path) {
-        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
-                .bucket(MAIN_BUCKET)
-                .prefix(path)
-                .recursive(false)
-                .build());
-        return results.iterator().hasNext();
-    }
+//    private boolean isFolderExists(String path) {
+//        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
+//                .bucket(MAIN_BUCKET)
+//                .prefix(path)
+//                .recursive(false)
+//                .build());
+//        return results.iterator().hasNext();
+//    }
 
     public void deleteResource(String username, String resourcePath) {
         String fullPath = getFullPath(username, resourcePath);
@@ -246,26 +223,21 @@ public class MinioShowInfoResourceService {
         }
     }
 
-//    public InputStream getFileStream(String username, String resourcePath) {
-
-    /// /        String userRootFolder = getUserRootFolder(username);
-    /// /        String fullPath = userRootFolder + resourcePath;
-//        String fullPath = getFullPath(username, resourcePath);
-//        log.info("fullPath from getFileStream: {}", fullPath);
-//        try {
-//            return minioClient.getObject(
-//                    GetObjectArgs.builder()
-//                            .bucket(MAIN_BUCKET)
-//                            .object(fullPath)
-//                            .build());
-//        } catch (Exception e) {
-//            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-//            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
-//        }
-//    }
-    public InputStream getFileStream(String username, String resourcePath) {
+    public StreamingResponseBody getFileStream(String username, String resourcePath) {
         String fullPath = getFullPath(username, resourcePath);
-        return getObjectStream(fullPath);
+
+        if (!resourcePath.endsWith("/")) {
+            return outputStream -> {
+                try (InputStream stream = getObjectStream(fullPath)) {
+                    stream.transferTo(outputStream);
+                }
+            };
+        } else {
+            return outputStream -> {
+                minioDownloadFolderService.downloadFolder(fullPath, outputStream);
+            };
+        }
+
     }
 
     public InputStream getObjectStream(String fullPath) {
@@ -286,4 +258,15 @@ public class MinioShowInfoResourceService {
         String userRootFolder = getUserRootFolder(username);
         return userRootFolder + resourcePath;
     }
+
+    public String getUserRootFolder(String username) {
+        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
+            log.warn("User - {} not found", username);
+            return new DaoException(ErrorInfo.USER_NOT_FOUND);
+        });
+        int id = user.getId();
+        return String.format(USER_ROOT_FOLDER_TEMPLATE, id);
+    }
 }
+
+
