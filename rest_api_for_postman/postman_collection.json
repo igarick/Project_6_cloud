@@ -1,0 +1,378 @@
+{
+	"info": {
+		"_postman_id": "528a8f8c-8097-41cc-98d9-1e6b4e946d44",
+		"name": "My Collection",
+		"description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "47745597",
+		"_collection_link": "https://fghdyhgff-9379222.postman.co/workspace/%D0%9F%D0%B5%D0%B4%D0%BE%D0%BB%D0%BB%D0%B8-%D0%98%D0%BE%D0%BB%D0%BF%D0%B0%D1%80's-Workspace~17261193-91df-4acc-891a-276250b60ee5/collection/47745597-528a8f8c-8097-41cc-98d9-1e6b4e946d44?action=share&source=collection_link&creator=47745597"
+	},
+	"item": [
+		{
+			"name": "6_pet",
+			"item": [
+				{
+					"name": "auth",
+					"item": [
+						{
+							"name": "sign-up",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"first\",\r\n    \"password\": \"12345\",\r\n    \"confirmPassword\": \"12345\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/auth/sign-up",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"auth",
+										"sign-up"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sign-in",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"first\",\r\n    \"password\": \"12345\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/auth/sign-in",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"auth",
+										"sign-in"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sign-out",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/auth/sign-out",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"auth",
+										"sign-out"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "ex",
+							"protocolProfileBehavior": {
+								"protocolVersion": "auto"
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/authorised",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"authorised"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "me",
+							"protocolProfileBehavior": {
+								"protocolVersion": "auto"
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/user/me",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"user",
+										"me"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "resource",
+					"item": [
+						{
+							"name": "show info file",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/resource?path=2/q.txt",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"resource"
+									],
+									"query": [
+										{
+											"key": "path",
+											"value": "2/q.txt"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "show info file a",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/resource?path=2/a.txt",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"resource"
+									],
+									"query": [
+										{
+											"key": "path",
+											"value": "2/a.txt"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/resource?path=1/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"resource"
+									],
+									"query": [
+										{
+											"key": "path",
+											"value": "1/"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "show info folder",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/resource?path=2/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"resource"
+									],
+									"query": [
+										{
+											"key": "path",
+											"value": "2/"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "download file",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/resource/download?path=2/a.txt",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"resource",
+										"download"
+									],
+									"query": [
+										{
+											"key": "path",
+											"value": "2/a.txt"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "download folder",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/resource/download?path=2/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"resource",
+										"download"
+									],
+									"query": [
+										{
+											"key": "path",
+											"value": "2/"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create folder",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/api/directory?path=1/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"directory"
+									],
+									"query": [
+										{
+											"key": "path",
+											"value": "1/"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": ""
+		}
+	]
+}
