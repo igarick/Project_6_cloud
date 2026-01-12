@@ -28,6 +28,7 @@ public class RequestValidator {
         validateName(name);
         validatePassword(password);
         validatePasswordMatches(password, confirmPassword);
+        log.info("Valid params: name - {}, password - {}, confirmPassword - {}", name, password, confirmPassword);
     }
 
     public void validateSignInInput(UserSignInDto userSignInDto) {

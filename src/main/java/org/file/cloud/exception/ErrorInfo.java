@@ -40,7 +40,7 @@ public enum ErrorInfo {
     RESOURCE_NOT_FOUND("Resource not found", SC_NOT_FOUND),
 
     // error
-    UNEXPECTED_ERROR("Unexpected error getting resource attributes", SC_INTERNAL_SERVER_ERROR),
+    UNEXPECTED_ERROR("Unexpected error", SC_INTERNAL_SERVER_ERROR),
 
 
 

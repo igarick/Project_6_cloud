@@ -1,7 +1,6 @@
 package org.file.cloud.controller;
 
 import io.minio.MinioClient;
-import io.minio.errors.*;
 import io.minio.messages.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,6 +10,7 @@ import org.file.cloud.dto.UserSignInDto;
 import org.file.cloud.dto.UserSignUpDto;
 import org.file.cloud.dto.UsernameDto;
 import org.file.cloud.service.UserService;
+import org.file.cloud.service.security.UserRootFolderManager;
 import org.file.cloud.validator.RequestValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,9 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.CREATED;
@@ -35,11 +32,14 @@ public class SignUpController {
     private final UserService userService;
 
     private final MinioClient minioClient;
+    private final UserRootFolderManager userRootFolderManager;
 
     @PostMapping("/api/auth/sign-up")
     public ResponseEntity<UsernameDto> signUpUser(@RequestBody UserSignUpDto userSignUpDto) {
         RequestValidator.validateSignUpInput(userSignUpDto);
         UsernameDto usernameDto = userService.signUp(userSignUpDto);
+        userRootFolderManager.createUserRootFolder(usernameDto);
+
         return ResponseEntity.status(CREATED).body(usernameDto);
     }
 

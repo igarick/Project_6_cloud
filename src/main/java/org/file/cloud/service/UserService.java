@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.UserSignInDto;
 import org.file.cloud.dto.UserSignUpDto;
 import org.file.cloud.dto.UsernameDto;
+import org.file.cloud.exception.DaoException;
 import org.file.cloud.exception.DuplicateUserException;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.model.User;
@@ -41,10 +42,10 @@ public class UserService {
         try {
             userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            log.warn("Failed to save user = {}. User already exists", userSignUpDto.getUsername());
+            log.warn("Failed to save user - {}. User already exists", userSignUpDto.getUsername());
             throw new DuplicateUserException(ErrorInfo.USERNAME_DUPLICATE_ERROR, e);
         }
-        log.info("User = {} saved", userSignUpDto.getUsername());
+        log.info("User - {} saved", userSignUpDto.getUsername());
 
         return UsernameDto.builder()
                 .username(user.getUsername())
@@ -65,5 +66,13 @@ public class UserService {
         return UsernameDto.builder()
                 .username(userSignInDto.getUsername())
                 .build();
+    }
+
+    public Long getUserId(String username) {
+        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
+            log.warn("User - {} not found", username);
+            return new DaoException(ErrorInfo.USER_NOT_FOUND);
+        });
+        return user.getId();
     }
 }

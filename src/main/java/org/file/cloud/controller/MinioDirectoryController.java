@@ -35,7 +35,7 @@ public class MinioDirectoryController {
         if (!path.endsWith("/") || !PathValidator.isValid(path)) {
             throw new InvalidOrEmptyPathException(ErrorInfo.NEW_FOLDER_PATH_ERROR);
         }
-        minioDirectoryService.validateFolderExists(userDetails.getUsername(), path);
+        minioDirectoryService.validateFolderExistence(userDetails.getUsername(), path);
         ResourceResponseDto folderDto = minioDirectoryService.createFolder(userDetails.getUsername(), path);
         return ResponseEntity.status(HttpStatus.CREATED).body(folderDto);
 

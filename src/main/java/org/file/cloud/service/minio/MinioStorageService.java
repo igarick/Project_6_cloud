@@ -1,7 +1,7 @@
 package org.file.cloud.service.minio;
 
 import io.minio.*;
-import io.minio.errors.ErrorResponseException;
+import io.minio.errors.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
@@ -11,7 +11,10 @@ import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @Slf4j
@@ -78,5 +81,19 @@ public class MinioStorageService {
         }
         log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
         throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+    }
+
+    public void createFolder(String path) {
+        try {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .object(path)
+                            .stream(InputStream.nullInputStream(), 0, -1)
+                            .build());
+        } catch (Exception e) {
+            log.error("Unexpected error while creating folder - {}. Error: {}", path, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR ,e);
+        }
     }
 }

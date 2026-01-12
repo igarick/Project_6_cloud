@@ -27,10 +27,11 @@ import java.util.Objects;
 @Slf4j
 @RequiredArgsConstructor
 public class MinioShowInfoResourceService {
-    private final UserRepository userRepository;
     private final MinioClient minioClient;
     private final MinioDownloadFolderService minioDownloadFolderService;
     private final MinioStorageService minioStorageService;
+
+    private final UserService userService;
 
     private final String MAIN_BUCKET = "user-files";
     private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
@@ -260,11 +261,12 @@ public class MinioShowInfoResourceService {
     }
 
     public String getUserRootFolder(String username) {
-        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
-            log.warn("User - {} not found", username);
-            return new DaoException(ErrorInfo.USER_NOT_FOUND);
-        });
-        int id = user.getId();
+//        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
+//            log.warn("User - {} not found", username);
+//            return new DaoException(ErrorInfo.USER_NOT_FOUND);
+//        });
+//        int id = user.getId();
+        Long id = userService.getUserId(username);
         return String.format(USER_ROOT_FOLDER_TEMPLATE, id);
     }
 }

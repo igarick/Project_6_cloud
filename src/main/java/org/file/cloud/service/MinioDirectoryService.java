@@ -2,28 +2,25 @@ package org.file.cloud.service;
 
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
 import io.minio.Result;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.folder.ResourceResponseDto;
-import org.file.cloud.exception.DaoException;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
-import org.file.cloud.model.User;
-import org.file.cloud.repository.UserRepository;
+import org.file.cloud.service.minio.MinioStorageService;
 import org.file.cloud.util.resource.ResourceType;
 import org.springframework.stereotype.Service;
-
-import java.io.InputStream;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MinioDirectoryService {
     private final MinioClient minioClient;
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private final MinioStorageService minioStorageService;
+
 
     private final String MAIN_BUCKET = "user-files";
     private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
@@ -32,12 +29,7 @@ public class MinioDirectoryService {
     public ResourceResponseDto createFolder(String username, String resourcePath) throws Exception {
         String userRootFolder = getUserRootFolder(username);
         String fullPath = userRootFolder + resourcePath;
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(MAIN_BUCKET)
-                        .object(fullPath)
-                        .stream(InputStream.nullInputStream(), 0, -1)
-                        .build());
+        minioStorageService.createFolder(fullPath);
         log.info("Folder - {} was created", resourcePath);
 
         return getInfoToResponse(resourcePath);
@@ -63,7 +55,7 @@ public class MinioDirectoryService {
     }
 
 
-    public void validateFolderExists(String username, String resourcePath) {
+    public void validateFolderExistence(String username, String resourcePath) {
         String userRootFolder = getUserRootFolder(username);
         String parentFolderPath = getParentFolderPath(resourcePath);
 
@@ -71,7 +63,7 @@ public class MinioDirectoryService {
         String fullPath = userRootFolder + resourcePath;
 
         if (!isFolderExists(fullParentPath)) {
-            log.warn("Path to parent folder - {} does not exist", fullParentPath);
+            log.warn("Parent folder does not exist. Path: {} ", fullParentPath);
             throw new ResourceException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
         }
         log.info("The parent folder - {} exists", fullParentPath);
@@ -99,11 +91,14 @@ public class MinioDirectoryService {
 //        Optional<User> byUsernameIgnoreCase = userRepository.findByUsernameIgnoreCase(username);
 //        User user = byUsernameIgnoreCase.get();
 
-        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
-            log.warn("User - {} not found", username);
-            return new DaoException(ErrorInfo.USER_NOT_FOUND);
-        });
-        int id = user.getId();
+//        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
+//            log.warn("User - {} not found", username);
+//            return new DaoException(ErrorInfo.USER_NOT_FOUND);
+//        });
+//        Long id = user.getId();
+
+        Long id = userService.getUserId(username);
+
         return String.format(USER_ROOT_FOLDER_TEMPLATE, id);
     }
 
