@@ -1,9 +1,8 @@
-package org.file.cloud.service.security;
+package org.file.cloud.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.UsernameDto;
-import org.file.cloud.service.UserService;
 import org.file.cloud.service.minio.MinioStorageService;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +20,6 @@ public class UserRootFolderManager {
         String userRootFolder = String.format(USER_ROOT_FOLDER_TEMPLATE, id);
 
         minioStorageService.createFolder(userRootFolder);
-        log.info("Created root folder - {}", userRootFolder);
+        log.info("Root folder is created: username = {}, path = {}",usernameDto.getUsername(), userRootFolder);
     }
 }

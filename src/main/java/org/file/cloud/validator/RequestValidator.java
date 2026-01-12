@@ -42,6 +42,7 @@ public class RequestValidator {
         }
         validateName(name);
         validatePassword(password);
+        log.info("Valid params: name - {}, password - {}", name, password);
     }
 
     private void validateName(String name) {

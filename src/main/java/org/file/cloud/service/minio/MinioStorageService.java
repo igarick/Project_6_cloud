@@ -35,7 +35,6 @@ public class MinioStorageService {
     }
 
     public InputStream getObjectStream(String fullPath) {
-        log.info("fullPath from getFileStream: {}", fullPath);
         try {
             return minioClient.getObject(
                     GetObjectArgs.builder()
@@ -48,13 +47,31 @@ public class MinioStorageService {
         }
     }
 
-    public void removeObjects(List<DeleteObject> objects) {
-        Iterable<Result<DeleteError>> removed =
-                minioClient.removeObjects(
-                        RemoveObjectsArgs.builder()
-                                .bucket(MAIN_BUCKET)
-                                .objects(objects)
-                                .build());
+    public Iterable<Result<Item>> getObjects(String fullPath) {
+        try {
+            return minioClient.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .prefix(fullPath)
+                            .recursive(true)
+                            .build());
+        } catch (Exception e) {
+            log.warn("Unexpected error while getting list objects: path = {}, error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+        }
+    }
+
+    public Iterable<Result<DeleteError>> removeObjects(List<DeleteObject> objects) {
+        try {
+            return minioClient.removeObjects(
+                    RemoveObjectsArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .objects(objects)
+                            .build());
+        } catch (Exception e) {
+            log.warn("Unexpected error while deleting: error - {}", e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+        }
     }
 
     public boolean isFileExists(String fullPath) {
@@ -76,7 +93,7 @@ public class MinioStorageService {
     private void handleErrorResponseException(ErrorResponseException e, String fullPath) {
         String code = e.errorResponse().code();
         if ("NoSuchKey".equals(code)) {
-            log.warn("Resource (FILE) - {} not found. ", fullPath);
+            log.warn("Resource (FILE) not found: path = {}", fullPath);
             throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
         }
         log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
@@ -93,7 +110,7 @@ public class MinioStorageService {
                             .build());
         } catch (Exception e) {
             log.error("Unexpected error while creating folder - {}. Error: {}", path, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR ,e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
     }
 }

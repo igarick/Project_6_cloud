@@ -36,12 +36,15 @@ public class MinioDownloadFolderService {
         // получаю список объектов внутри папки
         try {
             ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream);
-            Iterable<Result<Item>> results = minioClient.listObjects(
-                    ListObjectsArgs.builder()
-                            .bucket(MAIN_BUCKET)
-                            .prefix(fullPath)
-                            .recursive(true)
-                            .build());
+
+//            Iterable<Result<Item>> results = minioClient.listObjects(
+//                    ListObjectsArgs.builder()
+//                            .bucket(MAIN_BUCKET)
+//                            .prefix(fullPath)
+//                            .recursive(true)
+//                            .build());
+
+            Iterable<Result<Item>> results = minioStorageService.getObjects(fullPath);
 
             // если пустая папка - пропускаю
             for (Result<Item> result : results) {

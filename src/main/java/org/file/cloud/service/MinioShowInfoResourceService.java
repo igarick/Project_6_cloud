@@ -8,11 +8,8 @@ import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.folder.ResourceResponseDto;
-import org.file.cloud.exception.DaoException;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
-import org.file.cloud.model.User;
-import org.file.cloud.repository.UserRepository;
 import org.file.cloud.service.minio.MinioStorageService;
 import org.file.cloud.util.resource.ResourceType;
 import org.springframework.stereotype.Service;
@@ -33,20 +30,20 @@ public class MinioShowInfoResourceService {
 
     private final UserService userService;
 
-    private final String MAIN_BUCKET = "user-files";
-    private final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
+    private static final String MAIN_BUCKET = "user-files";
+    private static final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
 
-    public void checkResourceExists(String username, String resourcePath) {
+    public void validateResourceExistence(String username, String resourcePath) {
         String fullPath = getFullPath(username, resourcePath);
         if (resourcePath.endsWith("/")) {
             if (!minioStorageService.isFolderExists(fullPath)) {
-                log.warn("Resource (FOLDER) - {} not found", fullPath);
+                log.warn("Folder not found: path = {}", fullPath);
                 throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
             }
-            log.info("Resource (FOLDER) - {} exists", fullPath);
+            log.info("Folder exists: path = {}", fullPath);
         } else {
             if (minioStorageService.isFileExists(fullPath)) {
-                log.info("Resource (FILE) - {} exists", fullPath);
+                log.info("File exists: path = {}", fullPath);
             }
         }
     }
@@ -120,7 +117,7 @@ public class MinioShowInfoResourceService {
         return Objects.requireNonNullElse(objectSize, 0L);
     }
 
-//    public GetObjectAttributesResponse getResourceAttributes(String username, String resourcePath) {
+    //    public GetObjectAttributesResponse getResourceAttributes(String username, String resourcePath) {
     public GetObjectAttributesResponse getResourceAttributes(String fullPath) {
 //        String userRootFolder = getUserRootFolder(username);
 //        String fullPath = userRootFolder + resourcePath;
@@ -151,29 +148,22 @@ public class MinioShowInfoResourceService {
     private void handleErrorResponseException(ErrorResponseException e, String fullPath) {
         String code = e.errorResponse().code();
         if ("NoSuchKey".equals(code)) {
-            log.warn("Resource (FILE) - {} not found. ", fullPath);
+            log.warn("File not found: path = {}", fullPath);
             throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
         }
         log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
         throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
     }
 
-//    private boolean isFolderExists(String path) {
-//        Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
-//                .bucket(MAIN_BUCKET)
-//                .prefix(path)
-//                .recursive(false)
-//                .build());
-//        return results.iterator().hasNext();
-//    }
-
     public void deleteResource(String username, String resourcePath) {
         String fullPath = getFullPath(username, resourcePath);
 
         if (resourcePath.endsWith("/")) {
             deleteFolder(fullPath);
+            log.info("Folder was deleted: path = {}", fullPath);
         } else {
             deleteFile(fullPath);
+            log.info("File was deleted: path = {}", fullPath);
         }
     }
 
@@ -193,12 +183,7 @@ public class MinioShowInfoResourceService {
 
     public void deleteFolder(String fullPath) {
         try {
-            Iterable<Result<Item>> results = minioClient.listObjects(
-                    ListObjectsArgs.builder()
-                            .bucket(MAIN_BUCKET)
-                            .prefix(fullPath)
-                            .recursive(true)
-                            .build());
+            Iterable<Result<Item>> results = minioStorageService.getObjects(fullPath);
 
             List<DeleteObject> objects = new LinkedList<>();
             for (Result<Item> result : results) {
@@ -207,19 +192,13 @@ public class MinioShowInfoResourceService {
                 objects.add(new DeleteObject(objectName));
                 log.info("Marked for deletion: {}", objectName);
             }
-
-            Iterable<Result<DeleteError>> removed =
-                    minioClient.removeObjects(
-                            RemoveObjectsArgs.builder()
-                                    .bucket(MAIN_BUCKET)
-                                    .objects(objects)
-                                    .build());
+            Iterable<Result<DeleteError>> removed = minioStorageService.removeObjects(objects);
             for (Result<DeleteError> result : removed) {
                 DeleteError error = result.get();
                 log.warn("Error in deleting object {}; {}", error.objectName(), error.message());
             }
         } catch (Exception e) {
-            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            log.warn("Unexpected error while deleting folder: path = {}, error: {}", fullPath, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
     }
@@ -229,7 +208,7 @@ public class MinioShowInfoResourceService {
 
         if (!resourcePath.endsWith("/")) {
             return outputStream -> {
-                try (InputStream stream = getObjectStream(fullPath)) {
+                try (InputStream stream = minioStorageService.getObjectStream(fullPath)) {
                     stream.transferTo(outputStream);
                 }
             };
@@ -237,21 +216,6 @@ public class MinioShowInfoResourceService {
             return outputStream -> {
                 minioDownloadFolderService.downloadFolder(fullPath, outputStream);
             };
-        }
-
-    }
-
-    public InputStream getObjectStream(String fullPath) {
-        log.info("fullPath from getFileStream: {}", fullPath);
-        try {
-            return minioClient.getObject(
-                    GetObjectArgs.builder()
-                            .bucket(MAIN_BUCKET)
-                            .object(fullPath)
-                            .build());
-        } catch (Exception e) {
-            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
     }
 
@@ -261,11 +225,6 @@ public class MinioShowInfoResourceService {
     }
 
     public String getUserRootFolder(String username) {
-//        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
-//            log.warn("User - {} not found", username);
-//            return new DaoException(ErrorInfo.USER_NOT_FOUND);
-//        });
-//        int id = user.getId();
         Long id = userService.getUserId(username);
         return String.format(USER_ROOT_FOLDER_TEMPLATE, id);
     }

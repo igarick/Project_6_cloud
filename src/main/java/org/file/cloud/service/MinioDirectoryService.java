@@ -29,6 +29,7 @@ public class MinioDirectoryService {
     public ResourceResponseDto createFolder(String username, String resourcePath) throws Exception {
         String userRootFolder = getUserRootFolder(username);
         String fullPath = userRootFolder + resourcePath;
+
         minioStorageService.createFolder(fullPath);
         log.info("Folder - {} was created", resourcePath);
 
@@ -63,16 +64,16 @@ public class MinioDirectoryService {
         String fullPath = userRootFolder + resourcePath;
 
         if (!isFolderExists(fullParentPath)) {
-            log.warn("Parent folder does not exist. Path: {} ", fullParentPath);
+            log.warn("Parent folder does not exist: path = {}", fullParentPath);
             throw new ResourceException(ErrorInfo.PARENT_FOLDER_DOES_NOT_EXIST);
         }
-        log.info("The parent folder - {} exists", fullParentPath);
+        log.info("Parent folder exist: path = {}", fullParentPath);
 
         if (isFolderExists(fullPath)) {
-            log.warn("Folder - {} already exists", fullPath);
+            log.warn("Folder already exists: path = {}", fullPath);
             throw new ResourceException(ErrorInfo.FOLDER_ALREADY_EXISTS);
         }
-        log.info("Folder - {} does not exists", fullPath);
+        log.info("Folder does not exist: path = {}", fullPath);
     }
 
     private String getParentFolderPath(String resourcePath) {

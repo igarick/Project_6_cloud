@@ -10,7 +10,7 @@ public class PathValidator {
     private static final int MAX_PATH_LENGTH = 255;
 
     public static boolean isValid(String path) {
-        log.info("Start validation the path - {}", path);
+        log.info("Start validation the path = {}", path);
         if (path == null || path.isBlank()) {
             log.warn("Empty path");
             return false;
@@ -30,6 +30,7 @@ public class PathValidator {
             log.warn("Path exceeds maximum length");
             return false;
         }
+        log.info("Valid path = {}", path);
         return true;
     }
 
@@ -41,6 +42,7 @@ public class PathValidator {
                 return false;
             }
         }
+        log.info("All segments for path are valid: path = {}", path);
         return true;
     }
 

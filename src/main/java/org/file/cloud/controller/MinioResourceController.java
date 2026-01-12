@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -37,14 +36,14 @@ public class MinioResourceController {
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
 
-        minioShowInfoResourceService.checkResourceExists(userDetails.getUsername(), path);
+        minioShowInfoResourceService.validateResourceExistence(userDetails.getUsername(), path);
         ResourceResponseDto infoToResponse = minioShowInfoResourceService.buildDtoToResponse(userDetails.getUsername(), path);
         return ResponseEntity.status(HttpStatus.OK).body(infoToResponse);
     }
 
     @GetMapping("api/resource/download")
     public ResponseEntity<StreamingResponseBody> downloadResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
-        minioShowInfoResourceService.checkResourceExists(userDetails.getUsername(), path);
+        minioShowInfoResourceService.validateResourceExistence(userDetails.getUsername(), path);
 
         Path fileName = Paths.get(path).getFileName();
         String contentDisposition;

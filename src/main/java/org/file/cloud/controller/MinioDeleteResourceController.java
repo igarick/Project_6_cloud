@@ -27,9 +27,7 @@ public class MinioDeleteResourceController {
             log.warn("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
-
-        minioShowInfoResourceService.checkResourceExists(userDetails.getUsername(), path);
+        minioShowInfoResourceService.validateResourceExistence(userDetails.getUsername(), path);
         minioShowInfoResourceService.deleteResource(userDetails.getUsername(), path);
-        log.info("Resource - {} deleted", path);
     }
 }

@@ -10,7 +10,7 @@ import org.file.cloud.dto.UserSignInDto;
 import org.file.cloud.dto.UserSignUpDto;
 import org.file.cloud.dto.UsernameDto;
 import org.file.cloud.service.UserService;
-import org.file.cloud.service.security.UserRootFolderManager;
+import org.file.cloud.service.UserRootFolderManager;
 import org.file.cloud.validator.RequestValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,7 +39,6 @@ public class SignUpController {
         RequestValidator.validateSignUpInput(userSignUpDto);
         UsernameDto usernameDto = userService.signUp(userSignUpDto);
         userRootFolderManager.createUserRootFolder(usernameDto);
-
         return ResponseEntity.status(CREATED).body(usernameDto);
     }
 
