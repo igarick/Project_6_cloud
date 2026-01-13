@@ -22,4 +22,9 @@ public class UserRootFolderManager {
         minioStorageService.createFolder(userRootFolder);
         log.info("Root folder is created: username = {}, path = {}",usernameDto.getUsername(), userRootFolder);
     }
+
+    public String getUserRootFolder(String username) {
+        Long id = userService.getUserId(username);
+        return String.format(USER_ROOT_FOLDER_TEMPLATE, id);
+    }
 }

@@ -7,6 +7,7 @@ import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.MinioDownloadFolderService;
 import org.file.cloud.service.MinioShowInfoResourceService;
+import org.file.cloud.service.StorageResourceValidator;
 import org.file.cloud.validator.PathValidator;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,8 @@ public class MinioResourceController {
     private final MinioShowInfoResourceService minioShowInfoResourceService;
     private final MinioDownloadFolderService minioDownloadFolderService;
 
+    private final StorageResourceValidator storageResourceValidator;
+
     @GetMapping("/api/resource")
     public ResponseEntity<ResourceResponseDto> findFile(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
         if (!PathValidator.isValid(path)) {
@@ -36,14 +39,14 @@ public class MinioResourceController {
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
 
-        minioShowInfoResourceService.validateResourceExistence(userDetails.getUsername(), path);
+        storageResourceValidator.validateResourceExistence(userDetails.getUsername(), path);
         ResourceResponseDto infoToResponse = minioShowInfoResourceService.buildDtoToResponse(userDetails.getUsername(), path);
         return ResponseEntity.status(HttpStatus.OK).body(infoToResponse);
     }
 
     @GetMapping("api/resource/download")
     public ResponseEntity<StreamingResponseBody> downloadResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
-        minioShowInfoResourceService.validateResourceExistence(userDetails.getUsername(), path);
+        storageResourceValidator.validateResourceExistence(userDetails.getUsername(), path);
 
         Path fileName = Paths.get(path).getFileName();
         String contentDisposition;

@@ -11,10 +11,7 @@ import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 @Slf4j
@@ -25,6 +22,26 @@ public class MinioStorageService {
 
     private final String MAIN_BUCKET = "user-files";
 
+    public GetObjectAttributesResponse getFileAttributes(String fullPath) {
+        try {
+            return minioClient.getObjectAttributes(
+                    GetObjectAttributesArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .object(fullPath)
+                            .objectAttributes(
+                                    new String[]{"ObjectSize"
+//                                            "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
+                                    })
+                            .build());
+        } catch (ErrorResponseException e) {
+            handleErrorResponseException(e, fullPath);
+            throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
+        } catch (Exception e) {
+            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+        }
+    }
+
     public boolean isFolderExists(String path) {
         Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
                 .bucket(MAIN_BUCKET)
@@ -32,6 +49,20 @@ public class MinioStorageService {
                 .recursive(false)
                 .build());
         return results.iterator().hasNext();
+    }
+
+    public void deleteFile(String fullPath) {
+        try {
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .object(fullPath)
+                            .build());
+
+        } catch (Exception e) {
+            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+        }
     }
 
     public InputStream getObjectStream(String fullPath) {

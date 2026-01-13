@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.MinioShowInfoResourceService;
+import org.file.cloud.service.StorageResourceValidator;
 import org.file.cloud.validator.PathValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class MinioDeleteResourceController {
     private final MinioShowInfoResourceService minioShowInfoResourceService;
+    private final StorageResourceValidator storageResourceValidator;
 
     @DeleteMapping("/api/resource")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -27,7 +29,7 @@ public class MinioDeleteResourceController {
             log.warn("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
-        minioShowInfoResourceService.validateResourceExistence(userDetails.getUsername(), path);
+        storageResourceValidator.validateResourceExistence(userDetails.getUsername(), path);
         minioShowInfoResourceService.deleteResource(userDetails.getUsername(), path);
     }
 }
