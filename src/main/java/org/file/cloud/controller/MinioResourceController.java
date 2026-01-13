@@ -1,11 +1,11 @@
 package org.file.cloud.controller;
 
+import builder.ResponseDtoBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.folder.ResourceResponseDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
-import org.file.cloud.service.MinioDownloadFolderService;
 import org.file.cloud.service.MinioShowInfoResourceService;
 import org.file.cloud.service.StorageResourceValidator;
 import org.file.cloud.validator.PathValidator;
@@ -28,7 +28,7 @@ import java.nio.file.Paths;
 @RequiredArgsConstructor
 public class MinioResourceController {
     private final MinioShowInfoResourceService minioShowInfoResourceService;
-    private final MinioDownloadFolderService minioDownloadFolderService;
+    private final ResponseDtoBuilder responseDtoBuilder;
 
     private final StorageResourceValidator storageResourceValidator;
 
@@ -40,8 +40,11 @@ public class MinioResourceController {
         }
 
         storageResourceValidator.validateResourceExistence(userDetails.getUsername(), path);
-        ResourceResponseDto infoToResponse = minioShowInfoResourceService.buildDtoToResponse(userDetails.getUsername(), path);
-        return ResponseEntity.status(HttpStatus.OK).body(infoToResponse);
+//        ResourceResponseDto infoToResponse = minioShowInfoResourceService.buildDtoToResponse(userDetails.getUsername(), path);
+
+        ResourceResponseDto resourceResponseDto = responseDtoBuilder.buildResourceDto(userDetails.getUsername(), path);
+
+        return ResponseEntity.status(HttpStatus.OK).body(resourceResponseDto);
     }
 
     @GetMapping("api/resource/download")

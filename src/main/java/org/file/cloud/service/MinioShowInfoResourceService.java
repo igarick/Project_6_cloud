@@ -16,9 +16,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 @Slf4j
@@ -29,63 +32,63 @@ public class MinioShowInfoResourceService {
     private final MinioStorageService minioStorageService;
     private final PathfinderService pathfinderService;
 
-    public ResourceResponseDto buildDtoToResponse(String username, String resourcePath) {
-        String parentFolderPath = pathfinderService.extractParentFolderPath(resourcePath);
-        String fullPath = pathfinderService.getFullPath(username, resourcePath);
+//    public ResourceResponseDto buildDtoToResponse(String username, String resourcePath) {
+//        String parentFolderPath = pathfinderService.extractParentFolderPath(resourcePath);
+//        String fullPath = pathfinderService.getFullPath(username, resourcePath);
+//
+//        String name;
+//        Long size = null;
+//        String type;
+//        if (!resourcePath.endsWith("/")) {
+//            name = getFileName(parentFolderPath, resourcePath);
+//            size = getFileSize(fullPath);
+//            type = ResourceType.FILE.name();
+//        } else {
+//            name = getFolderName(parentFolderPath, resourcePath);
+//            type = ResourceType.DIRECTORY.name();
+//        }
+//        log.info("Collected DTO: path - {}, name - {}, size - {}, type - {}", parentFolderPath, name, size, type);
+//
+//        return ResourceResponseDto.builder()
+//                .path(parentFolderPath)
+//                .name(name)
+//                .size(size)
+//                .type(type)
+//                .build();
+//    }
+//
+//    private String getFileName(String parentFolderPath, String resourcePath) {
+//        String name;
+//        if (parentFolderPath.isEmpty()) {
+//            name = resourcePath;
+//        } else {
+//            int length = parentFolderPath.length();
+//            name = resourcePath.substring(length);
+//        }
+//        log.info("File name - {}", name);
+//        return name;
+//    }
+//
+//    public String getFolderName(String parentFolderPath, String resourcePath) {
+//        String name;
+//        if (parentFolderPath.isEmpty()) {
+//            name = resourcePath.substring(0, resourcePath.length() - 1);
+//        } else {
+//            int length = parentFolderPath.length();
+//            name = resourcePath.substring(length, resourcePath.length() - 1);
+//        }
+//        log.info("Folder name - {}", name);
+//        return name;
+//    }
 
-        String name;
-        Long size = null;
-        String type;
-        if (!resourcePath.endsWith("/")) {
-            name = getFileName(parentFolderPath, resourcePath);
-            size = getFileSize(fullPath);
-            type = ResourceType.FILE.name();
-        } else {
-            name = getFolderName(parentFolderPath, resourcePath);
-            type = ResourceType.DIRECTORY.name();
-        }
-        log.info("Collected DTO: path - {}, name - {}, size - {}, type - {}", parentFolderPath, name, size, type);
-
-        return ResourceResponseDto.builder()
-                .path(parentFolderPath)
-                .name(name)
-                .size(size)
-                .type(type)
-                .build();
-    }
-
-    private String getFileName(String parentFolderPath, String resourcePath) {
-        String name;
-        if (parentFolderPath.isEmpty()) {
-            name = resourcePath;
-        } else {
-            int length = parentFolderPath.length();
-            name = resourcePath.substring(length);
-        }
-        log.info("File name - {}", name);
-        return name;
-    }
-
-    public String getFolderName(String parentFolderPath, String resourcePath) {
-        String name;
-        if (parentFolderPath.isEmpty()) {
-            name = resourcePath.substring(0, resourcePath.length() - 1);
-        } else {
-            int length = parentFolderPath.length();
-            name = resourcePath.substring(length, resourcePath.length() - 1);
-        }
-        log.info("Folder name - {}", name);
-        return name;
-    }
-
-    public Long getFileSize(String fullPath) {
-        GetObjectAttributesResponse fileAttributes = minioStorageService.getFileAttributes(fullPath);
-        Long objectSize = fileAttributes.result().objectSize();
-        if (objectSize == null) {
-            return 0L;
-        }
-        return objectSize;
-    }
+//    public Long getFileSize(String fullPath) {
+//        GetObjectAttributesResponse fileAttributes = minioStorageService.getFileAttributes(fullPath);
+//        Long objectSize = fileAttributes.result().objectSize();
+//        if (objectSize == null) {
+//            return 0L;
+//        }
+//        return objectSize;
+//    }
 
     public void deleteResource(String username, String resourcePath) {
         String fullPath = pathfinderService.getFullPath(username, resourcePath);
@@ -131,8 +134,46 @@ public class MinioShowInfoResourceService {
             };
         } else {
             return outputStream -> {
-                minioDownloadFolderService.downloadFolder(fullPath, outputStream);
+                downloadFolder(fullPath, outputStream);
             };
+        }
+    }
+
+    public void downloadFolder(String fullPath, OutputStream outputStream) {
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+
+            Iterable<Result<Item>> results = minioStorageService.getObjects(fullPath);
+
+            // если пустая папка - пропускаю
+            for (Result<Item> result : results) {
+                Item item = result.get();
+                String objectName = item.objectName();
+                if (item.isDir()) {
+                    zipOutputStream.putNextEntry(new ZipEntry(objectName + "/"));
+                    zipOutputStream.closeEntry();
+                    log.info("Adding empty folder Entry name: {} ", objectName);
+                    continue;
+                }
+
+                // определяю имя для зип файла
+                log.info("objectName: {}", objectName);
+                String zipEntryName = objectName.substring(fullPath.length());
+                log.info("Adding file Entry name: {} ", zipEntryName);
+
+                // записываю энтри в зип поток
+                zipOutputStream.putNextEntry(new ZipEntry(zipEntryName));
+
+                // получаю каждый объект в виде потока и передаю в зип поток
+                try (InputStream stream = minioStorageService.getObjectStream(objectName)) {
+                    stream.transferTo(zipOutputStream);
+                }
+                zipOutputStream.closeEntry();
+            }
+            zipOutputStream.finish();
+            log.info("ZIP completed");
+        } catch (Exception e) {
+            log.error("Failed to ZIP folder - {}. Error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
         }
     }
 }
