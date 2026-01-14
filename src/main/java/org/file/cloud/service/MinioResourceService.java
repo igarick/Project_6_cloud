@@ -1,17 +1,15 @@
 package org.file.cloud.service;
 
-import io.minio.*;
-import io.minio.errors.ErrorResponseException;
+import io.minio.Result;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.dto.folder.ResourceResponseDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
+import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.minio.MinioStorageService;
-import org.file.cloud.util.resource.ResourceType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -19,79 +17,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class MinioShowInfoResourceService {
-    private final MinioClient minioClient;
-    private final MinioDownloadFolderService minioDownloadFolderService;
+public class MinioResourceService {
     private final MinioStorageService minioStorageService;
-    private final PathfinderService pathfinderService;
-
-//    public ResourceResponseDto buildDtoToResponse(String username, String resourcePath) {
-//        String parentFolderPath = pathfinderService.extractParentFolderPath(resourcePath);
-//        String fullPath = pathfinderService.getFullPath(username, resourcePath);
-//
-//        String name;
-//        Long size = null;
-//        String type;
-//        if (!resourcePath.endsWith("/")) {
-//            name = getFileName(parentFolderPath, resourcePath);
-//            size = getFileSize(fullPath);
-//            type = ResourceType.FILE.name();
-//        } else {
-//            name = getFolderName(parentFolderPath, resourcePath);
-//            type = ResourceType.DIRECTORY.name();
-//        }
-//        log.info("Collected DTO: path - {}, name - {}, size - {}, type - {}", parentFolderPath, name, size, type);
-//
-//        return ResourceResponseDto.builder()
-//                .path(parentFolderPath)
-//                .name(name)
-//                .size(size)
-//                .type(type)
-//                .build();
-//    }
-//
-//    private String getFileName(String parentFolderPath, String resourcePath) {
-//        String name;
-//        if (parentFolderPath.isEmpty()) {
-//            name = resourcePath;
-//        } else {
-//            int length = parentFolderPath.length();
-//            name = resourcePath.substring(length);
-//        }
-//        log.info("File name - {}", name);
-//        return name;
-//    }
-//
-//    public String getFolderName(String parentFolderPath, String resourcePath) {
-//        String name;
-//        if (parentFolderPath.isEmpty()) {
-//            name = resourcePath.substring(0, resourcePath.length() - 1);
-//        } else {
-//            int length = parentFolderPath.length();
-//            name = resourcePath.substring(length, resourcePath.length() - 1);
-//        }
-//        log.info("Folder name - {}", name);
-//        return name;
-//    }
-
-//    public Long getFileSize(String fullPath) {
-//        GetObjectAttributesResponse fileAttributes = minioStorageService.getFileAttributes(fullPath);
-//        Long objectSize = fileAttributes.result().objectSize();
-//        if (objectSize == null) {
-//            return 0L;
-//        }
-//        return objectSize;
-//    }
+    private final PathService pathService;
+    private final StorageResourceValidator storageResourceValidator;
 
     public void deleteResource(String username, String resourcePath) {
-        String fullPath = pathfinderService.getFullPath(username, resourcePath);
+        String fullPath = pathService.getFullPath(username, resourcePath);
         if (resourcePath.endsWith("/")) {
             deleteFolder(fullPath);
             log.info("Folder was deleted: path = {}", fullPath);
@@ -124,7 +62,7 @@ public class MinioShowInfoResourceService {
     }
 
     public StreamingResponseBody getFileStream(String username, String resourcePath) {
-        String fullPath = pathfinderService.getFullPath(username, resourcePath);
+        String fullPath = pathService.getFullPath(username, resourcePath);
 
         if (!resourcePath.endsWith("/")) {
             return outputStream -> {
@@ -176,6 +114,20 @@ public class MinioShowInfoResourceService {
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
         }
     }
+
+    public void renameFile(String username, String from, String to) {
+//        1) rename file
+
+        // проверить существование папки КУДА (родительской папки)
+        storageResourceValidator.validateParentFolderExistence(username, to);
+
+        // проверить существует ли этот файл
+        storageResourceValidator.validateFileExistence(username, to);
+
+        // копировать
+
+    }
+
 }
 
 

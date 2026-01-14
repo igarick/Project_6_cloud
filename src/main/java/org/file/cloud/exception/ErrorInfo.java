@@ -33,6 +33,8 @@ public enum ErrorInfo {
     FOLDER_ALREADY_EXISTS("Folder already exists", SC_CONFLICT),
 
     // resource
+    RESOURCE_ALREADY_EXISTS("Resource lying on the path = %s already exists",  SC_CONFLICT),
+
 //    RESOURCE_NOT_FOUND("Resource does not exist", SC_NOT_FOUND),
 
 
@@ -44,12 +46,13 @@ public enum ErrorInfo {
 
 
 
-
-
-
-
     TEST_EXCEPTION("vota fuck", SC_BAD_REQUEST);
 
     private final String errorMessage;
     private final int statusCode;
+
+    public String format(Object... args) {
+        return String.format(errorMessage, args);
+    }
+
 }

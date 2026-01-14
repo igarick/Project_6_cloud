@@ -8,6 +8,7 @@ import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.exception.ErrorInfo;
+import org.file.cloud.exception.folder.ResourceFileNotFoundException;
 import org.file.cloud.exception.folder.ResourceException;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,23 @@ public class MinioStorageService {
     private final MinioClient minioClient;
 
     private final String MAIN_BUCKET = "user-files";
+
+    public void renameFile() {
+//        try {
+//            minioClient.copyObject(
+//                    CopyObjectArgs.builder()
+//                            .bucket("my-bucketname")
+//                            .object("my-objectname")
+//                            .source(
+//                                    CopySource.builder()
+//                                            .bucket("my-source-bucketname")
+//                                            .object("my-objectname")
+//                                            .build())
+//                            .build());
+//        } catch (ErrorResponseException e) {
+//            throw new RuntimeException(e);
+//        }
+    }
 
     public GetObjectAttributesResponse getFileAttributes(String fullPath) {
         try {
@@ -125,7 +143,7 @@ public class MinioStorageService {
         String code = e.errorResponse().code();
         if ("NoSuchKey".equals(code)) {
             log.warn("Resource (FILE) not found: path = {}", fullPath);
-            throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
+            throw new ResourceFileNotFoundException(ErrorInfo.RESOURCE_NOT_FOUND);
         }
         log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
         throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
@@ -143,5 +161,6 @@ public class MinioStorageService {
             log.error("Unexpected error while creating folder - {}. Error: {}", path, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
+        log.info("Created folder: path = {}", path);
     }
 }

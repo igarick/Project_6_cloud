@@ -2,6 +2,7 @@ package org.file.cloud.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.ErrorMessageDto;
+import org.file.cloud.exception.folder.ResourceAlreadyExistsException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -33,6 +34,13 @@ public class GlobalHandlerException {
         return ResponseEntity
                 .status(500)
                 .body(new ErrorMessageDto("Internal server error"));
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ErrorMessageDto> handleAlreadyExistsError(ResourceAlreadyExistsException e) {
+        return ResponseEntity
+                .status(e.getStatusCode())
+                .body(new ErrorMessageDto(e.getErrorMessage()));
     }
 
 }

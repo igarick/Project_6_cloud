@@ -7,12 +7,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PathfinderService {
-    private final UserService userService;
+public class PathService {
     private final UserRootFolderManager userRootFolderManager;
-
-    private static final String USER_ROOT_FOLDER_TEMPLATE = "user-%s-files/";
-
 
     public String getFullPath(String username, String resourcePath) {
         String userRootFolder = userRootFolderManager.getUserRootFolder(username);
@@ -30,7 +26,6 @@ public class PathfinderService {
         log.info("Extracted parent folder path: {}", parentFolder);
         return parentFolder;
     }
-
 
 
 }

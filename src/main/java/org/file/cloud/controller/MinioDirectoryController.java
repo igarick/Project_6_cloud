@@ -24,8 +24,6 @@ public class MinioDirectoryController {
     private final MinioDirectoryService minioDirectoryService;
     private final StorageResourceValidator storageResourceValidator;
 
-    private final String VALID_FOLDER_NAME_PATTERN = "^[^\\\\/:*?\"<>|]+$";
-
 
     @GetMapping("/api/directory")
     public void showFolderContents(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
@@ -35,6 +33,7 @@ public class MinioDirectoryController {
     @PostMapping("/api/directory")
     public ResponseEntity<ResourceResponseDto> getInfoDirectory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
         if (!path.endsWith("/") || !PathValidator.isValid(path)) {
+            log.warn("Invalid or empty path to the new folder: path = {}", path);
             throw new InvalidOrEmptyPathException(ErrorInfo.NEW_FOLDER_PATH_ERROR);
         }
         storageResourceValidator.validateFolderExistence(userDetails.getUsername(), path);
