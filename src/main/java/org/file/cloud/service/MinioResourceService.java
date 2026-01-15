@@ -1,6 +1,7 @@
 package org.file.cloud.service;
 
 import io.minio.Result;
+import io.minio.errors.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
@@ -8,13 +9,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
-import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.minio.MinioStorageService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -118,15 +122,80 @@ public class MinioResourceService {
     public void renameFile(String username, String from, String to) {
 //        1) rename file
 
+        String parentFolderPathFrom = pathService.extractParentFolderPath(from);
+
         // проверить существование папки КУДА (родительской папки)
         storageResourceValidator.validateParentFolderExistence(username, to);
+        String parentFolderPathTo = pathService.extractParentFolderPath(to);
+        String fullPathFrom = pathService.getFullPath(username, from);
+        log.info("Full path From = {}", fullPathFrom);
 
         // проверить существует ли этот файл
-        storageResourceValidator.validateFileExistence(username, to);
+        storageResourceValidator.ensureFileDoesNotExist(username, to);
+        String fullPathTo = pathService.getFullPath(username, to);
+        log.info("Full path To = {}", fullPathTo);
+
+        // равны ли род папки?
+        if (parentFolderPathTo.equals(parentFolderPathFrom)) {
+
+            // копировать
+            minioStorageService.renameFile(fullPathFrom, fullPathTo);
+            log.info("Copied file: from = {}, to = {}", fullPathFrom, fullPathTo);
+            minioStorageService.deleteFile(fullPathFrom);
+            log.info("Deleted file: path = {}", fullPathFrom);
+
+        }
+    }
+
+    public void renameFolder(String username, String from, String to) {
+        String parentFolderPathFrom = pathService.extractParentFolderPath(from);
+
+        // проверить существование родит папки КУДА
+        storageResourceValidator.validateParentFolderExistence(username, to);
+        String parentFolderPathTo = pathService.extractParentFolderPath(to);
+
+        String fullPathFrom = pathService.getFullPath(username, from);
+        log.info("Full path From = {}", fullPathFrom);
+
+        // проверить существует ли эта папка
+//            storageResourceValidator.validateFileExistence(username, to);
+        storageResourceValidator.ensureFolderDoesNotExist(username, to);
+
+        String fullPathTo = pathService.getFullPath(username, to);
+        log.info("Full path To = {}", fullPathTo);
+
+        // равны ли род папки?
+        if (parentFolderPathTo.equals(parentFolderPathFrom)) {
+
+            // получить список обьектов папки ОТ КУДА
+            Iterable<Result<Item>> results = minioStorageService.getObjects(fullPathFrom);
+
+
+            try {
+                for (Result<Item> result : results) {
+                    String s;
+                    if (result.get().isDir()) {
+                        s = result.get().objectName() + "/";
+                    }
+                    String objectName = result.get().objectName();
+                    Path fileName = Path.of(objectName).getFileName();
+                    s = fullPathTo + "/" + fileName;
+
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        // скопировать список
 
         // копировать
+//                minioStorageService.renameFile(fullPathFrom, fullPathTo);
+//                log.info("Copied file: from = {}, to = {}", fullPathFrom, fullPathTo);
+//                minioStorageService.deleteFile(fullPathFrom);
+//                log.info("Deleted file: path = {}", fullPathFrom);
 
     }
+
 
 }
 

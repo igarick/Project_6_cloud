@@ -23,7 +23,7 @@ public class PathService {
         } else {
             parentFolder = resourcePath.substring(0, lastSlash + 1);
         }
-        log.info("Extracted parent folder path: {}", parentFolder);
+        log.info("Parent folder path = {}", parentFolder);
         return parentFolder;
     }
 

@@ -23,21 +23,22 @@ public class MinioStorageService {
 
     private final String MAIN_BUCKET = "user-files";
 
-    public void renameFile() {
-//        try {
-//            minioClient.copyObject(
-//                    CopyObjectArgs.builder()
-//                            .bucket("my-bucketname")
-//                            .object("my-objectname")
-//                            .source(
-//                                    CopySource.builder()
-//                                            .bucket("my-source-bucketname")
-//                                            .object("my-objectname")
-//                                            .build())
-//                            .build());
-//        } catch (ErrorResponseException e) {
-//            throw new RuntimeException(e);
-//        }
+    public void renameFile(String from, String to) {
+        try {
+            minioClient.copyObject(
+                    CopyObjectArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .object(to)
+                            .source(
+                                    CopySource.builder()
+                                            .bucket(MAIN_BUCKET)
+                                            .object(from)
+                                            .build())
+                            .build());
+        } catch (Exception e) {
+            log.error("Unexpected error while coping file: pathTo = {}, error: {}", to, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+        }
     }
 
     public GetObjectAttributesResponse getFileAttributes(String fullPath) {
@@ -51,11 +52,11 @@ public class MinioStorageService {
 //                                            "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
                                     })
                             .build());
-        } catch (ErrorResponseException e) {
-            handleErrorResponseException(e, fullPath);
-            throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
+//        } catch (ErrorResponseException e) {
+//            handleErrorResponseException(e, fullPath);
+//            throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
         } catch (Exception e) {
-            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            log.error("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
         }
     }
@@ -132,14 +133,14 @@ public class MinioStorageService {
                             .build());
             return true;
         } catch (ErrorResponseException e) {
-//            handleErrorResponseException(e, fullPath);
             String code = e.errorResponse().code();
             if ("NoSuchKey".equals(code)) {
-                log.warn("Resource (FILE) not found: path = {}", fullPath);
+//                log.warn("Resource (FILE) not found: path = {}", fullPath);
                 return false;
             }
             log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-            throw new ResourceFileNotFoundException(ErrorInfo.RESOURCE_NOT_FOUND);
+//            throw new ResourceFileNotFoundException(ErrorInfo.RESOURCE_NOT_FOUND);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
         } catch (Exception e) {
             log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);

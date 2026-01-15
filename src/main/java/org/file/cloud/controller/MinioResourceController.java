@@ -82,16 +82,18 @@ public class MinioResourceController {
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
 
-            // rename FILE
-        if (!from.endsWith("/") && from.equals(to)) {
-            // проверил существование файла ОТ КУДА
-            storageResourceValidator.validateResourceExistence(userDetails.getUsername(), from);
+        // проверил существование файла ОТ КУДА
+        storageResourceValidator.validateResourceExistence(userDetails.getUsername(), from);
 
-            // проверить существование папки КУДА (родительской папки)
-            // проверить существует ли этот файл
-            // копировать
-        } else {
-//            move
+        // isRename
+        // родитльские папики должны быть равны ==
+
+        // rename FILE / FOLDER
+
+        if (!from.endsWith("/") && !to.endsWith("/")) {
+            minioResourceService.renameFile(userDetails.getUsername(), from, to);
+        } else if (from.endsWith("/") && to.endsWith("/")) {
+
         }
 
     }
