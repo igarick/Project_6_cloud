@@ -30,9 +30,15 @@ public class StorageResourceValidator {
         } else {
             if (minioStorageService.isFileExists(fullPath)) {
                 log.info("File exists: path = {}", fullPath);
+            } else {
+                log.warn("File not found: path = {}", fullPath);
+                throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
             }
         }
     }
+
+
+
 
     public void validateFolderExistence(String username, String resourcePath) {
         String parentFolderPath = pathService.extractParentFolderPath(resourcePath);
@@ -67,13 +73,13 @@ public class StorageResourceValidator {
     public void validateFileExistence(String username, String resourcePath) {
         String fullPath = pathService.getFullPath(username, resourcePath);
         try {
-            minioStorageService.isFileExists(fullPath);
-            log.info("File already exists: path = {}", fullPath);
+            if (minioStorageService.isFileExists(fullPath)) {
+                log.info("File already exists: path = {}", fullPath);
 
 //            String errorMessage = String.format(RESOURCE_ALREADY_EXISTS_ERROR_MESSAGE, fullPath);
-            String errorMessage = String.format(ErrorInfo.RESOURCE_ALREADY_EXISTS.getErrorMessage(), fullPath);
-            throw new ResourceAlreadyExistsException(errorMessage, ErrorInfo.RESOURCE_ALREADY_EXISTS.getStatusCode());
-
+                String errorMessage = String.format(ErrorInfo.RESOURCE_ALREADY_EXISTS.getErrorMessage(), fullPath);
+                throw new ResourceAlreadyExistsException(errorMessage, ErrorInfo.RESOURCE_ALREADY_EXISTS.getStatusCode());
+            }
         } catch (ResourceFileNotFoundException e) {
             log.info("File does not exist: path = {}", fullPath);
         }

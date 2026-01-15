@@ -130,13 +130,20 @@ public class MinioStorageService {
                             .bucket(MAIN_BUCKET)
                             .object(fullPath)
                             .build());
+            return true;
         } catch (ErrorResponseException e) {
-            handleErrorResponseException(e, fullPath);
+//            handleErrorResponseException(e, fullPath);
+            String code = e.errorResponse().code();
+            if ("NoSuchKey".equals(code)) {
+                log.warn("Resource (FILE) not found: path = {}", fullPath);
+                return false;
+            }
+            log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceFileNotFoundException(ErrorInfo.RESOURCE_NOT_FOUND);
         } catch (Exception e) {
             log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
         }
-        return true;
     }
 
     private void handleErrorResponseException(ErrorResponseException e, String fullPath) {
