@@ -52,9 +52,6 @@ public class MinioStorageService {
 //                                            "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
                                     })
                             .build());
-//        } catch (ErrorResponseException e) {
-//            handleErrorResponseException(e, fullPath);
-//            throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
         } catch (Exception e) {
             log.error("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
@@ -135,26 +132,14 @@ public class MinioStorageService {
         } catch (ErrorResponseException e) {
             String code = e.errorResponse().code();
             if ("NoSuchKey".equals(code)) {
-//                log.warn("Resource (FILE) not found: path = {}", fullPath);
                 return false;
             }
             log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-//            throw new ResourceFileNotFoundException(ErrorInfo.RESOURCE_NOT_FOUND);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
         } catch (Exception e) {
             log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
         }
-    }
-
-    private void handleErrorResponseException(ErrorResponseException e, String fullPath) {
-        String code = e.errorResponse().code();
-        if ("NoSuchKey".equals(code)) {
-            log.warn("Resource (FILE) not found: path = {}", fullPath);
-            throw new ResourceFileNotFoundException(ErrorInfo.RESOURCE_NOT_FOUND);
-        }
-        log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-        throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
     }
 
     public void createFolder(String path) {

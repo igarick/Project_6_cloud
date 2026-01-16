@@ -62,7 +62,7 @@ public class StorageResourceValidator {
         String fullParentPath = pathService.getFullPath(username, parentFolderPath);
 
         if (!minioStorageService.isFolderExists(fullParentPath)) {
-            log.warn("Invalid or empty path to the new folder: path = {}", fullParentPath);
+            log.warn("Parent folder does not exist: path = {}", fullParentPath);
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
         log.info("Parent folder exists: path = {}", fullParentPath);

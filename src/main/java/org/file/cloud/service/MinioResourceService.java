@@ -1,7 +1,6 @@
 package org.file.cloud.service;
 
 import io.minio.Result;
-import io.minio.errors.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
@@ -13,12 +12,9 @@ import org.file.cloud.service.minio.MinioStorageService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -126,14 +122,15 @@ public class MinioResourceService {
         }
     }
 
-    public void renameFile(String username, String from, String to) {
+    public void moveFile(String username, String from, String to) {
 //        1) rename file
-        log.info("Start coping file: from = {}, to = {}", from, to);
+        log.info("Start coping/renaming file: from = {}, to = {}", from, to);
         String parentFolderPathFrom = pathService.extractParentFolderPath(from);
 
         // проверить существование папки КУДА (родительской папки)
         storageResourceValidator.validateParentFolderExistence(username, to);
         String parentFolderPathTo = pathService.extractParentFolderPath(to);
+
         String fullPathFrom = pathService.getFullPath(username, from);
         log.info("Full path From = {}", fullPathFrom);
 
@@ -143,15 +140,43 @@ public class MinioResourceService {
         log.info("Full path To = {}", fullPathTo);
 
         // равны ли род папки?
-        if (parentFolderPathTo.equals(parentFolderPathFrom)) {
 
-            // копировать
-            minioStorageService.renameFile(fullPathFrom, fullPathTo);
-            log.info("Copied file: from = {}, to = {}", fullPathFrom, fullPathTo);
-            minioStorageService.deleteFile(fullPathFrom);
-            log.info("Deleted file: path = {}", fullPathFrom);
 
+        String fileNameFrom = Path.of(from).getFileName().toString();
+        String fileNameTo = Path.of(to).getFileName().toString();
+
+        if (!parentFolderPathTo.equals(parentFolderPathFrom) && !fileNameFrom.equals(fileNameTo)) {
+            log.info("Relocatable file names are not equal: fileNameFrom = {}, fileNameTo = {}", fileNameFrom, fileNameTo);
+            throw new ResourceException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
+
+        log.info("Copied/Moved file: from = {}, to = {}", fullPathFrom, fullPathTo);
+        minioStorageService.renameFile(fullPathFrom, fullPathTo);
+        log.info("Deleted file: path = {}", fullPathFrom);
+        minioStorageService.deleteFile(fullPathFrom);
+//        if (parentFolderPathTo.equals(parentFolderPathFrom)) {
+//            log.info("Start renaming file");
+//            // переименовать
+//            minioStorageService.renameFile(fullPathFrom, fullPathTo);
+//            log.info("Copied file: from = {}, to = {}", fullPathFrom, fullPathTo);
+//            minioStorageService.deleteFile(fullPathFrom);
+//            log.info("Deleted file: path = {}", fullPathFrom);
+//
+//        } else {
+//            log.info("Start coping file");
+//            // копировать
+//            String fileNameFrom = Path.of(from).getFileName().toString();
+//            String fileNameTo = Path.of(to).getFileName().toString();
+//            if (fileNameFrom.equals(fileNameTo)) {
+//                minioStorageService.renameFile(fullPathFrom, fullPathTo);
+//                log.info("Copied file: from = {}, to = {}", fullPathFrom, fullPathTo);
+//                minioStorageService.deleteFile(fullPathFrom);
+//                log.info("Deleted file: path = {}", fullPathFrom);
+//            } else {
+//                log.info("Relocatable file names are not equal: fileNameFrom = {}, fileNameTo = {}", fileNameFrom, fileNameTo);
+//                throw new ResourceException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
+//            }
+//        }
     }
 
     public void renameFolder(String username, String from, String to) {
@@ -200,23 +225,15 @@ public class MinioResourceService {
                     log.info("Copied file: from = {}, to = {}", fullPathFrom, fullPathTo);
                 }
 
-                    Iterable<Result<DeleteError>> removed = minioStorageService.removeObjects(objects);
-                    for (Result<DeleteError> deleteErrorResult : removed) {
-                        DeleteError error = deleteErrorResult.get();
-                        log.warn("Error in deleting object {}; {}", error.objectName(), error.message());
-                    }
-                    log.info("Deleted folder: path = {}", fullPathFrom);
-//                    String s;
-//                    if (result.get().isDir()) {
-//                        s = result.get().objectName() + "/";
-//                    }
-//
-//                    String objectName = result.get().objectName();
-//                    Path fileName = Path.of(objectName).getFileName();
-//                    s = fullPathTo + "/" + fileName;
-
+                Iterable<Result<DeleteError>> removed = minioStorageService.removeObjects(objects);
+                for (Result<DeleteError> deleteErrorResult : removed) {
+                    DeleteError error = deleteErrorResult.get();
+                    log.warn("Error in deleting object {}; {}", error.objectName(), error.message());
+                }
+                log.info("Deleted folder: path = {}", fullPathFrom);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                log.error("Failed to rename folder: path = {}, error: {}", fullPathFrom, e.getMessage(), e);
+                throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
             }
         }
         // скопировать список
