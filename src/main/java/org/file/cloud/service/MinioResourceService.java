@@ -118,11 +118,11 @@ public class MinioResourceService {
         String fullPathTo = pathService.getFullPath(username, to);
         log.info("Full path To = {}", fullPathTo);
 
-        String fileNameFrom = Path.of(from).getFileName().toString();
-        String fileNameTo = Path.of(to).getFileName().toString();
+        String resourceNameFrom = Path.of(from).getFileName().toString();
+        String resourceNameTo = Path.of(to).getFileName().toString();
 
-        if (!parentFolderPathTo.equals(parentFolderPathFrom) && !fileNameFrom.equals(fileNameTo)) {
-            log.info("Relocatable file names are not equal: fileNameFrom = {}, fileNameTo = {}", fileNameFrom, fileNameTo);
+        if (!parentFolderPathTo.equals(parentFolderPathFrom) && !resourceNameFrom.equals(resourceNameTo)) {
+            log.info("Relocatable resource names are not equal: resourceNameFrom = {}, resourceNameTo = {}", resourceNameFrom, resourceNameTo);
             throw new ResourceException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
 
@@ -173,9 +173,13 @@ public class MinioResourceService {
         String resourceNameTo = Path.of(to).getFileName().toString();
 
         // равны ли род папки?
+        if (parentFolderPathTo.startsWith(parentFolderPathFrom) && !parentFolderPathFrom.equals(parentFolderPathTo)) {
+            log.info("Cannot copy folder into its own subfolder: fileNameFrom = {}, fileNameTo = {}", resourceNameFrom, resourceNameTo);
+            throw new ResourceException(ErrorInfo.COPY_FOLDER_INTO_SUBFOLDER_ERROR);
+        }
 
         if (!parentFolderPathTo.equals(parentFolderPathFrom) && !resourceNameFrom.equals(resourceNameTo)) {
-            log.info("Relocatable file names are not equal: fileNameFrom = {}, fileNameTo = {}", resourceNameFrom, resourceNameTo);
+            log.info("Relocatable resource names are not equal: fileNameFrom = {}, fileNameTo = {}", resourceNameFrom, resourceNameTo);
             throw new ResourceException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
 

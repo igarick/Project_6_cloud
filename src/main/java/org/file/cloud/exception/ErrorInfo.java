@@ -34,6 +34,7 @@ public enum ErrorInfo {
 
     // resource
     RESOURCE_ALREADY_EXISTS("Resource lying on the path = %s already exists",  SC_CONFLICT),
+    COPY_FOLDER_INTO_SUBFOLDER_ERROR("Cannot copy folder into its own subfolder", SC_BAD_REQUEST),
 
 //    RESOURCE_NOT_FOUND("Resource does not exist", SC_NOT_FOUND),
 
