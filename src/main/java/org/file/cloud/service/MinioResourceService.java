@@ -90,17 +90,24 @@ public class MinioResourceService {
             for (Result<Item> result : results) {
                 Item item = result.get();
                 String objectName = item.objectName();
-                if (item.isDir()) {
-                    zipOutputStream.putNextEntry(new ZipEntry(objectName + "/"));
-                    zipOutputStream.closeEntry();
-                    log.info("Adding empty folder Entry name: {} ", objectName);
+                log.info("objectName: {}", objectName);
+
+                if (fullPath.equals(objectName)) {
+                    log.info("Skip directory folder: objectName = {}", objectName);
                     continue;
                 }
 
+//                if (item.isDir()) {
+//                    log.info("Put folder empty name: path = {}", objectName + "/");
+//                    zipOutputStream.putNextEntry(new ZipEntry(objectName + "/"));
+//                    zipOutputStream.closeEntry();
+//                    log.info("Adding empty folder Entry name: {} ", objectName);
+//                    continue;
+//                }
+
                 // определяю имя для зип файла
-                log.info("objectName: {}", objectName);
                 String zipEntryName = objectName.substring(fullPath.length());
-                log.info("Adding file Entry name: {} ", zipEntryName);
+                log.info("Adding file/folder Entry name: {} ", zipEntryName);
 
                 // записываю энтри в зип поток
                 zipOutputStream.putNextEntry(new ZipEntry(zipEntryName));
@@ -121,7 +128,7 @@ public class MinioResourceService {
 
     public void renameFile(String username, String from, String to) {
 //        1) rename file
-
+        log.info("Start coping file: from = {}, to = {}", from, to);
         String parentFolderPathFrom = pathService.extractParentFolderPath(from);
 
         // проверить существование папки КУДА (родительской папки)
@@ -148,6 +155,7 @@ public class MinioResourceService {
     }
 
     public void renameFolder(String username, String from, String to) {
+        log.info("Start coping folder: from = {}, to = {}", from, to);
         String parentFolderPathFrom = pathService.extractParentFolderPath(from);
 
         // проверить существование родит папки КУДА
@@ -169,19 +177,44 @@ public class MinioResourceService {
 
             // получить список обьектов папки ОТ КУДА
             Iterable<Result<Item>> results = minioStorageService.getObjects(fullPathFrom);
-
-
             try {
-                for (Result<Item> result : results) {
-                    String s;
-                    if (result.get().isDir()) {
-                        s = result.get().objectName() + "/";
-                    }
-                    String objectName = result.get().objectName();
-                    Path fileName = Path.of(objectName).getFileName();
-                    s = fullPathTo + "/" + fileName;
+                List<DeleteObject> objects = new LinkedList<>();
 
+                for (Result<Item> result : results) {
+                    Item item = result.get();
+                    String objectName = item.objectName();
+                    objects.add(new DeleteObject(objectName));
+                    log.info("objectName: {}", objectName);
+
+                    if (fullPathFrom.equals(objectName)) {
+                        log.info("Skip directory folder: objectName = {}", objectName);
+                        continue;
+                    }
+
+                    String fileName = objectName.substring(fullPathFrom.length());
+                    log.info("File name: path = {}", fileName);
+                    String newPath = fullPathTo + fileName;
+                    log.info("New file name: path = {}", newPath);
+
+                    minioStorageService.renameFile(objectName, newPath);
+                    log.info("Copied file: from = {}, to = {}", fullPathFrom, fullPathTo);
                 }
+
+                    Iterable<Result<DeleteError>> removed = minioStorageService.removeObjects(objects);
+                    for (Result<DeleteError> deleteErrorResult : removed) {
+                        DeleteError error = deleteErrorResult.get();
+                        log.warn("Error in deleting object {}; {}", error.objectName(), error.message());
+                    }
+                    log.info("Deleted folder: path = {}", fullPathFrom);
+//                    String s;
+//                    if (result.get().isDir()) {
+//                        s = result.get().objectName() + "/";
+//                    }
+//
+//                    String objectName = result.get().objectName();
+//                    Path fileName = Path.of(objectName).getFileName();
+//                    s = fullPathTo + "/" + fileName;
+
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

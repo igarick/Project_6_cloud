@@ -93,8 +93,10 @@ public class MinioResourceController {
         if (!from.endsWith("/") && !to.endsWith("/")) {
             minioResourceService.renameFile(userDetails.getUsername(), from, to);
         } else if (from.endsWith("/") && to.endsWith("/")) {
-
+            minioResourceService.renameFolder(userDetails.getUsername(), from,to);
         }
+
+        log.info("Другой случай оп оп оп ой");
 
     }
 }
