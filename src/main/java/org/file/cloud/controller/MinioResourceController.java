@@ -74,22 +74,14 @@ public class MinioResourceController {
     }
 
     @GetMapping("/api/resource/move")
-    public void renameResource(@AuthenticationPrincipal UserDetails userDetails,
-                               @RequestParam String from,
-                               @RequestParam String to) {
+    public void moveResource(@AuthenticationPrincipal UserDetails userDetails,
+                             @RequestParam String from,
+                             @RequestParam String to) {
         if (!PathValidator.isValid(from) || !PathValidator.isValid(to)) {
             log.warn("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
-        if (from.endsWith("/") && !to.endsWith("/") ||
-            (!from.endsWith("/") && to.endsWith("/"))) {
-            log.warn("Cannot move: source and target types do not match (from = {}, to = {})", from, to);
-            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
-        }
-        if (from.endsWith("/") && to.startsWith(from) && !to.equals(from)) {
-            log.warn("Cannot move folder into its own subfolder: from = {}, to = {}", from, to);
-            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
-        }
+        PathValidator.validateForMove(from, to);
         storageResourceValidator.ensureResourceExists(userDetails.getUsername(), from);
         minioResourceService.moveResource(userDetails.getUsername(), from, to);
     }

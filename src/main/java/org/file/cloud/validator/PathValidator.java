@@ -50,4 +50,16 @@ public class PathValidator {
         String s = path.replace("/", "");
         return s.length() < MAX_PATH_LENGTH;
     }
+
+    public static void validateForMove(String from, String to) {
+        if (from.endsWith("/") && !to.endsWith("/") ||
+            (!from.endsWith("/") && to.endsWith("/"))) {
+            log.warn("Cannot move: source and target types do not match (from = {}, to = {})", from, to);
+            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
+        }
+        if (from.endsWith("/") && to.startsWith(from) && !to.equals(from)) {
+            log.warn("Cannot move folder into its own subfolder: from = {}, to = {}", from, to);
+            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
+        }
+    }
 }

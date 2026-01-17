@@ -136,7 +136,7 @@ public class MinioResourceService {
     }
 
     public void moveFile(String fullPathFrom, String fullPathTo) {
-        minioStorageService.renameFile(fullPathFrom, fullPathTo);
+        minioStorageService.moveFile(fullPathFrom, fullPathTo);
         log.info("Copied/Moved file: from = {}, to = {}", fullPathFrom, fullPathTo);
         minioStorageService.deleteFile(fullPathFrom);
         log.info("Deleted file: path = {}", fullPathFrom);
@@ -161,7 +161,7 @@ public class MinioResourceService {
                 String newPath = fullPathTo + fileName;
                 log.info("New file name: path = {}", newPath);
 
-                minioStorageService.renameFile(objectName, newPath);
+                minioStorageService.moveFile(objectName, newPath);
                 log.info("Copied/Moved file: from = {}, to = {}", fullPathFrom, fullPathTo);
             }
             removeObjects(objects, fullPathFrom);

@@ -16,8 +16,6 @@ public class StorageResourceValidator {
     private final MinioStorageService minioStorageService;
     private final PathService pathService;
 
-//    private static final String RESOURCE_ALREADY_EXISTS_ERROR_MESSAGE = "Resource lying on the path = %s already exists";
-
     public void ensureResourceExists(String username, String resourcePath) {
         String fullPath = pathService.getFullPath(username, resourcePath);
         if (resourcePath.endsWith("/")) {
@@ -36,7 +34,6 @@ public class StorageResourceValidator {
             throw new ResourceException(ErrorInfo.RESOURCE_NOT_FOUND);
         }
     }
-
 
     public void validateFolderExistence(String username, String resourcePath) {
         String parentFolderPath = pathService.extractParentFolderPath(resourcePath);
@@ -90,17 +87,13 @@ public class StorageResourceValidator {
 
 
 
-//        try {
-//            if (minioStorageService.isFileExists(fullPath)) {
-//                log.info("File already exists: path = {}", fullPath);
-//
-////            String errorMessage = String.format(RESOURCE_ALREADY_EXISTS_ERROR_MESSAGE, fullPath);
-//                String errorMessage = String.format(ErrorInfo.RESOURCE_ALREADY_EXISTS.getErrorMessage(), fullPath);
-//                throw new ResourceAlreadyExistsException(errorMessage, ErrorInfo.RESOURCE_ALREADY_EXISTS.getStatusCode());
-//            }
-//        } catch (ResourceFileNotFoundException e) {
-//            log.info("File does not exist: path = {}", fullPath);
-//        }
-//    }
+
+
+
+
+
+
+
+
 
 }

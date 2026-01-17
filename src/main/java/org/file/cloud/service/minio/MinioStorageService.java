@@ -8,7 +8,6 @@ import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.exception.ErrorInfo;
-import org.file.cloud.exception.folder.ResourceFileNotFoundException;
 import org.file.cloud.exception.folder.ResourceException;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +22,7 @@ public class MinioStorageService {
 
     private final String MAIN_BUCKET = "user-files";
 
-    public void renameFile(String from, String to) {
+    public void moveFile(String from, String to) {
         try {
             minioClient.copyObject(
                     CopyObjectArgs.builder()
