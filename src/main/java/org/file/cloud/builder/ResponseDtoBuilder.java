@@ -31,7 +31,7 @@ public class ResponseDtoBuilder {
             name = getFolderName(parentFolderPath, resourcePath);
             type = ResourceType.DIRECTORY.name();
         }
-        log.info("Collected resource DTO: path - {}, name - {}, size - {}, type - {}", parentFolderPath, name, size, type);
+        log.info("Collected resource DTO: parentPath - {}, name - {}, size - {}, type - {}", parentFolderPath, name, size, type);
         return ResourceResponseDto.builder()
                 .path(parentFolderPath)
                 .name(name)
@@ -64,7 +64,7 @@ public class ResponseDtoBuilder {
         return name;
     }
 
-    private Long getFileSize(String fullPath) {
+    public Long getFileSize(String fullPath) {
         GetObjectAttributesResponse fileAttributes = minioStorageService.getFileAttributes(fullPath);
         Long objectSize = fileAttributes.result().objectSize();
         if (objectSize == null) {

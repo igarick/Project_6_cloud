@@ -74,7 +74,7 @@ public class MinioResourceController {
     }
 
     @GetMapping("/api/resource/move")
-    public void moveResource(@AuthenticationPrincipal UserDetails userDetails,
+    public ResponseEntity<ResourceResponseDto> moveResource(@AuthenticationPrincipal UserDetails userDetails,
                              @RequestParam String from,
                              @RequestParam String to) {
         if (!PathValidator.isValid(from) || !PathValidator.isValid(to)) {
@@ -83,6 +83,7 @@ public class MinioResourceController {
         }
         PathValidator.validateForMove(from, to);
         storageResourceValidator.ensureResourceExists(userDetails.getUsername(), from);
-        minioResourceService.moveResource(userDetails.getUsername(), from, to);
+        ResourceResponseDto resourceResponseDto = minioResourceService.moveResource(userDetails.getUsername(), from, to);
+        return ResponseEntity.ok().body(resourceResponseDto);
     }
 }

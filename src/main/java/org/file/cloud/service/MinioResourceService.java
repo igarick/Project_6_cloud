@@ -6,6 +6,8 @@ import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.builder.ResponseDtoBuilder;
+import org.file.cloud.dto.folder.ResourceResponseDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
 import org.file.cloud.service.minio.MinioStorageService;
@@ -27,6 +29,7 @@ public class MinioResourceService {
     private final MinioStorageService minioStorageService;
     private final PathService pathService;
     private final StorageResourceValidator storageResourceValidator;
+    private final ResponseDtoBuilder responseDtoBuilder;
 
     public void deleteResource(String username, String resourcePath) {
         String fullPath = pathService.getFullPath(username, resourcePath);
@@ -101,7 +104,7 @@ public class MinioResourceService {
         }
     }
 
-    public void moveResource(String username, String from, String to) {
+    public ResourceResponseDto moveResource(String username, String from, String to) {
         String parentFolderPathFrom = pathService.extractParentFolderPath(from);
 
         storageResourceValidator.validateParentFolderExistence(username, to);
@@ -126,13 +129,13 @@ public class MinioResourceService {
                     resourceNameFrom, parentFolderPathFrom, resourceNameTo, parentFolderPathTo);
             throw new ResourceException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
-
         if (from.endsWith("/") && to.endsWith("/")) {
             moveFolder(fullPathFrom, fullPathTo);
         }
         if (!from.endsWith("/") && !to.endsWith("/")) {
             moveFile(fullPathFrom, fullPathTo);
         }
+        return responseDtoBuilder.buildResourceDto(username, to);
     }
 
     public void moveFile(String fullPathFrom, String fullPathTo) {
