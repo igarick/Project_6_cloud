@@ -10,12 +10,8 @@ import java.util.prefs.BackingStoreException;
 @Getter
 @AllArgsConstructor
 public class ResourceAlreadyExistsException extends RuntimeException {
-   private final String errorMessage;
-   private final int statusCode;
+   private final ErrorInfo errorInfo;
+   private final String path;
 
 
-//    public ResourceAlreadyExistsException(String errorMessage, int statusCode) {
-//        this.errorMessage = errorMessage;
-//        this.statusCode = statusCode;
-//    }
 }

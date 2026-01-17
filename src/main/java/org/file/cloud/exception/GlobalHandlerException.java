@@ -38,9 +38,10 @@ public class GlobalHandlerException {
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ErrorMessageDto> handleAlreadyExistsError(ResourceAlreadyExistsException e) {
+        String errorMessage = String.format(e.getErrorInfo().getErrorMessage(), e.getPath());
         return ResponseEntity
-                .status(e.getStatusCode())
-                .body(new ErrorMessageDto(e.getErrorMessage()));
+                .status(e.getErrorInfo().getStatusCode())
+                .body(new ErrorMessageDto(errorMessage));
     }
 
 }

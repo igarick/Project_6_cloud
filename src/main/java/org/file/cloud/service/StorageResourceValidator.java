@@ -69,8 +69,7 @@ public class StorageResourceValidator {
         String fullPath = pathService.getFullPath(username, resourcePath);
         if (minioStorageService.isFileExists(fullPath)) {
             log.info("File already exists: path = {}", fullPath);
-            String errorMessage = String.format(ErrorInfo.RESOURCE_ALREADY_EXISTS.getErrorMessage(), resourcePath);
-            throw new ResourceAlreadyExistsException(errorMessage, ErrorInfo.RESOURCE_ALREADY_EXISTS.getStatusCode());
+            throw new ResourceAlreadyExistsException(ErrorInfo.RESOURCE_ALREADY_EXISTS, resourcePath);
         }
         log.info("File does not exist: path = {}", fullPath);
     }
