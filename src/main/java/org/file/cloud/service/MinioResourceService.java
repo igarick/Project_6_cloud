@@ -101,37 +101,6 @@ public class MinioResourceService {
         }
     }
 
-    public void moveFile(String username, String from, String to) {
-//        1) rename file
-        log.info("Start coping/renaming file: from = {}, to = {}", from, to);
-        String parentFolderPathFrom = pathService.extractParentFolderPath(from);
-
-        // проверить существование папки КУДА (родительской папки)
-        storageResourceValidator.validateParentFolderExistence(username, to);
-        String parentFolderPathTo = pathService.extractParentFolderPath(to);
-
-        String fullPathFrom = pathService.getFullPath(username, from);
-        log.info("Full path From = {}", fullPathFrom);
-
-        // проверить существует ли этот файл ------------------------------=====================------
-        storageResourceValidator.ensureFileDoesNotExist(username, to);
-        String fullPathTo = pathService.getFullPath(username, to);
-        log.info("Full path To = {}", fullPathTo);
-
-        String resourceNameFrom = Path.of(from).getFileName().toString();
-        String resourceNameTo = Path.of(to).getFileName().toString();
-
-        if (!parentFolderPathTo.equals(parentFolderPathFrom) && !resourceNameFrom.equals(resourceNameTo)) {
-            log.info("Relocatable resource names are not equal: resourceNameFrom = {}, resourceNameTo = {}", resourceNameFrom, resourceNameTo);
-            throw new ResourceException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
-        }
-
-        log.info("Copied/Moved file: from = {}, to = {}", fullPathFrom, fullPathTo);
-        minioStorageService.renameFile(fullPathFrom, fullPathTo);
-        log.info("Deleted file: path = {}", fullPathFrom);
-        minioStorageService.deleteFile(fullPathFrom);
-    }
-
     public void moveResource(String username, String from, String to) {
         String parentFolderPathFrom = pathService.extractParentFolderPath(from);
 
@@ -146,85 +115,62 @@ public class MinioResourceService {
         } else {
             storageResourceValidator.ensureFileDoesNotExist(username, to);
         }
-
-        String fullPathTo = pathService.getFullPath(username, to);
-        log.info("Full path To = {}", fullPathTo);
-
-    }
-
-    public void renameFolder(String username, String from, String to) {
-        log.info("Start coping folder: from = {}, to = {}", from, to);
-        String parentFolderPathFrom = pathService.extractParentFolderPath(from);
-
-        // проверить существование родит папки КУДА
-        storageResourceValidator.validateParentFolderExistence(username, to);
-        String parentFolderPathTo = pathService.extractParentFolderPath(to);
-
-        String fullPathFrom = pathService.getFullPath(username, from);
-        log.info("Full path From = {}", fullPathFrom);
-
-        // проверить существует ли эта папка -------------------------------------==========-------------------
-        storageResourceValidator.ensureFolderDoesNotExist(username, to);
-
         String fullPathTo = pathService.getFullPath(username, to);
         log.info("Full path To = {}", fullPathTo);
 
         String resourceNameFrom = Path.of(from).getFileName().toString();
         String resourceNameTo = Path.of(to).getFileName().toString();
 
-        // равны ли род папки?
-        if (parentFolderPathTo.startsWith(parentFolderPathFrom) && !parentFolderPathFrom.equals(parentFolderPathTo)) {
-            log.info("Cannot copy folder into its own subfolder: fileNameFrom = {}, fileNameTo = {}", resourceNameFrom, resourceNameTo);
-            throw new ResourceException(ErrorInfo.COPY_FOLDER_INTO_SUBFOLDER_ERROR);
-        }
-
         if (!parentFolderPathTo.equals(parentFolderPathFrom) && !resourceNameFrom.equals(resourceNameTo)) {
-            log.info("Relocatable resource names are not equal: fileNameFrom = {}, fileNameTo = {}", resourceNameFrom, resourceNameTo);
+            log.info("Resource names and parent folders do not match: resourceNameFrom = {} ({}), resourceNameTo = {} ({})",
+                    resourceNameFrom, parentFolderPathFrom, resourceNameTo, parentFolderPathTo);
             throw new ResourceException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
 
-//        if (parentFolderPathTo.equals(parentFolderPathFrom)) {
-
-            // получить список обьектов папки ОТ КУДА
-            Iterable<Result<Item>> results = minioStorageService.getObjects(fullPathFrom);
-
-            try {
-                List<DeleteObject> objects = new LinkedList<>();
-                for (Result<Item> result : results) {
-                    String objectName = result.get().objectName();
-                    objects.add(new DeleteObject(objectName));
-                    log.info("objectName: {}", objectName);
-
-                    if (fullPathFrom.equals(objectName)) {
-                        log.info("Skip directory folder: objectName = {}", objectName);
-                        continue;
-                    }
-
-                    String fileName = objectName.substring(fullPathFrom.length());
-                    String newPath = fullPathTo + fileName;
-                    log.info("New file name: path = {}", newPath);
-
-                    minioStorageService.renameFile(objectName, newPath);
-                    log.info("Copied file: from = {}, to = {}", fullPathFrom, fullPathTo);
-                }
-                removeObjects(objects, fullPathFrom);
-                log.info("Removed folder: path = {}", fullPathFrom);
-            } catch (Exception e) {
-                log.error("Failed to rename folder: path = {}, error: {}", fullPathFrom, e.getMessage(), e);
-                throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
-            }
-//        } else {
-//            log.info("Relocatable folder names are not equal: fileNameFrom = {}, fileNameTo = {}", resourceNameFrom, resourceNameTo);
-//            throw new ResourceException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
-//        }
-
-
-
+        if (from.endsWith("/") && to.endsWith("/")) {
+            moveFolder(fullPathFrom, fullPathTo);
+        }
+        if (!from.endsWith("/") && !to.endsWith("/")) {
+            moveFile(fullPathFrom, fullPathTo);
+        }
     }
 
-//    public String buildNewPathFile() {
-//
-//    }
+    public void moveFile(String fullPathFrom, String fullPathTo) {
+        minioStorageService.renameFile(fullPathFrom, fullPathTo);
+        log.info("Copied/Moved file: from = {}, to = {}", fullPathFrom, fullPathTo);
+        minioStorageService.deleteFile(fullPathFrom);
+        log.info("Deleted file: path = {}", fullPathFrom);
+    }
+
+    public void moveFolder(String fullPathFrom, String fullPathTo) {
+        Iterable<Result<Item>> results = minioStorageService.getObjects(fullPathFrom);
+
+        try {
+            List<DeleteObject> objects = new LinkedList<>();
+            for (Result<Item> result : results) {
+                String objectName = result.get().objectName();
+                objects.add(new DeleteObject(objectName));
+                log.info("objectName: {}", objectName);
+
+                if (fullPathFrom.equals(objectName)) {
+                    log.info("Skip directory folder: objectName = {}", objectName);
+                    continue;
+                }
+
+                String fileName = objectName.substring(fullPathFrom.length());
+                String newPath = fullPathTo + fileName;
+                log.info("New file name: path = {}", newPath);
+
+                minioStorageService.renameFile(objectName, newPath);
+                log.info("Copied/Moved file: from = {}, to = {}", fullPathFrom, fullPathTo);
+            }
+            removeObjects(objects, fullPathFrom);
+            log.info("Removed folder: path = {}", fullPathFrom);
+        } catch (Exception e) {
+            log.error("Failed to rename folder: path = {}, error: {}", fullPathFrom, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+        }
+    }
 
     public void removeObjects(List<DeleteObject> objects, String fullPathFrom) {
         try {

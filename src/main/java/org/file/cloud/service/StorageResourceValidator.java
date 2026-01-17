@@ -18,7 +18,7 @@ public class StorageResourceValidator {
 
 //    private static final String RESOURCE_ALREADY_EXISTS_ERROR_MESSAGE = "Resource lying on the path = %s already exists";
 
-    public void validateResourceExistence(String username, String resourcePath) {
+    public void ensureResourceExists(String username, String resourcePath) {
         String fullPath = pathService.getFullPath(username, resourcePath);
         if (resourcePath.endsWith("/")) {
             if (!minioStorageService.isFolderExists(fullPath)) {

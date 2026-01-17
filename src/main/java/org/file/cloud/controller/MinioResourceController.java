@@ -1,8 +1,8 @@
 package org.file.cloud.controller;
 
-import org.file.cloud.builder.ResponseDtoBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.builder.ResponseDtoBuilder;
 import org.file.cloud.dto.folder.ResourceResponseDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
@@ -35,14 +35,14 @@ public class MinioResourceController {
             log.warn("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
-        storageResourceValidator.validateResourceExistence(userDetails.getUsername(), path);
+        storageResourceValidator.ensureResourceExists(userDetails.getUsername(), path);
         ResourceResponseDto resourceResponseDto = responseDtoBuilder.buildResourceDto(userDetails.getUsername(), path);
         return ResponseEntity.status(HttpStatus.OK).body(resourceResponseDto);
     }
 
     @GetMapping("/api/resource/download")
     public ResponseEntity<StreamingResponseBody> downloadResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
-        storageResourceValidator.validateResourceExistence(userDetails.getUsername(), path);
+        storageResourceValidator.ensureResourceExists(userDetails.getUsername(), path);
 
         Path fileName = Paths.get(path).getFileName();
         String contentDisposition;
@@ -69,7 +69,7 @@ public class MinioResourceController {
             log.warn("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
-        storageResourceValidator.validateResourceExistence(userDetails.getUsername(), path);
+        storageResourceValidator.ensureResourceExists(userDetails.getUsername(), path);
         minioResourceService.deleteResource(userDetails.getUsername(), path);
     }
 
@@ -81,22 +81,16 @@ public class MinioResourceController {
             log.warn("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
-
-        // проверил существование файла ОТ КУДА
-        storageResourceValidator.validateResourceExistence(userDetails.getUsername(), from);
-
-        // isRename
-        // родитльские папики должны быть равны ==
-
-        // rename FILE / FOLDER
-
-        if (!from.endsWith("/") && !to.endsWith("/")) {
-            minioResourceService.moveFile(userDetails.getUsername(), from, to);
-        } else if (from.endsWith("/") && to.endsWith("/")) {
-            minioResourceService.renameFolder(userDetails.getUsername(), from,to);
+        if (from.endsWith("/") && !to.endsWith("/") ||
+            (!from.endsWith("/") && to.endsWith("/"))) {
+            log.warn("Cannot move: source and target types do not match (from = {}, to = {})", from, to);
+            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
-
-        log.info("Другой случай оп оп оп ой");
-
+        if (from.endsWith("/") && to.startsWith(from) && !to.equals(from)) {
+            log.warn("Cannot move folder into its own subfolder: from = {}, to = {}", from, to);
+            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
+        }
+        storageResourceValidator.ensureResourceExists(userDetails.getUsername(), from);
+        minioResourceService.moveResource(userDetails.getUsername(), from, to);
     }
 }

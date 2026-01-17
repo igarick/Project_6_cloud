@@ -75,8 +75,6 @@ public class ResponseDtoBuilder {
 
     public ResourceResponseDto buildFolderDto(String resourcePath) {
         String parentFolderPath = pathService.extractParentFolderPath(resourcePath);
-        log.info("Path to JSON - {}", parentFolderPath);
-
         String name = getFolderName(parentFolderPath, resourcePath);
         log.info("Collected folder DTO: path - {}, name - {}, type - {}", parentFolderPath, name, ResourceType.DIRECTORY.name());
         return ResourceResponseDto.builder()
