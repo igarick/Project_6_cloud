@@ -20,6 +20,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -85,5 +86,15 @@ public class MinioResourceController {
         storageResourceValidator.ensureResourceExists(userDetails.getUsername(), from);
         ResourceResponseDto resourceResponseDto = minioResourceService.moveResource(userDetails.getUsername(), from, to);
         return ResponseEntity.ok().body(resourceResponseDto);
+    }
+
+    @GetMapping("/api/resource/search")
+    public ResponseEntity<List<ResourceResponseDto>> searchResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String query) {
+        if (!PathValidator.isValid(query)) {
+            log.warn("Invalid or empty path");
+            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
+        }
+        List<ResourceResponseDto> resourceResponseDtos = minioResourceService.searchResource(userDetails.getUsername(), query);
+        return ResponseEntity.ok().body(resourceResponseDtos);
     }
 }

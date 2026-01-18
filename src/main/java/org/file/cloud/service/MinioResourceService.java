@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -30,6 +31,31 @@ public class MinioResourceService {
     private final PathService pathService;
     private final StorageResourceValidator storageResourceValidator;
     private final ResponseDtoBuilder responseDtoBuilder;
+    private final UserRootFolderManager userRootFolderManager;
+
+    public List<ResourceResponseDto> searchResource(String username, String query) {
+        String userRootFolder = userRootFolderManager.getUserRootFolder(username);
+        log.info("userRootFolder = " + userRootFolder);
+        Iterable<Result<Item>> objects = minioStorageService.getObjects(userRootFolder);
+
+        List<ResourceResponseDto> result = new ArrayList<>();
+        try {
+            for (Result<Item> object : objects) {
+                String objectName = object.get().objectName();
+
+                String resourcePath = objectName.substring(userRootFolder.length());
+                log.info("resourcePath = " + resourcePath);
+                if (!resourcePath.contains(query)) {
+                    continue;
+                }
+                result.add(responseDtoBuilder.buildResourceDto(username, resourcePath));
+            }
+        } catch (Exception e) {
+            log.error("Failed to get resource: query = {}, error: {}", query, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+        }
+        return result;
+    }
 
     public void deleteResource(String username, String resourcePath) {
         String fullPath = pathService.getFullPath(username, resourcePath);
@@ -159,7 +185,6 @@ public class MinioResourceService {
                     log.info("Skip directory folder: objectName = {}", objectName);
                     continue;
                 }
-
                 String fileName = objectName.substring(fullPathFrom.length());
                 String newPath = fullPathTo + fileName;
                 log.info("New file name: path = {}", newPath);
