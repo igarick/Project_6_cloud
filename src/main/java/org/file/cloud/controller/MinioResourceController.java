@@ -92,7 +92,7 @@ public class MinioResourceController {
     public ResponseEntity<List<ResourceResponseDto>> searchResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String query) {
         if (!PathValidator.isValid(query)) {
             log.warn("Invalid or empty path");
-            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
+            throw new InvalidOrEmptyPathException(ErrorInfo.SEARCH_QUERY_ERROR);
         }
         List<ResourceResponseDto> resourceResponseDtos = minioResourceService.searchResource(userDetails.getUsername(), query);
         return ResponseEntity.ok().body(resourceResponseDtos);
