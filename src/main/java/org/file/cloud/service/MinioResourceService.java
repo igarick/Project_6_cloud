@@ -10,10 +10,13 @@ import org.file.cloud.builder.ResponseDtoBuilder;
 import org.file.cloud.dto.folder.ResourceResponseDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
+import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.minio.MinioStorageService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -32,6 +35,40 @@ public class MinioResourceService {
     private final StorageResourceValidator storageResourceValidator;
     private final ResponseDtoBuilder responseDtoBuilder;
     private final UserRootFolderManager userRootFolderManager;
+
+    public void uploadResource(String username, String path, List<MultipartFile> files) {
+        String userRootFolder = userRootFolderManager.getUserRootFolder(username);
+        String fullPath = userRootFolder + path;
+        if (!minioStorageService.isFolderExists(fullPath)) {
+            log.error("Folder does not exists: path = {}", fullPath);
+            throw new InvalidOrEmptyPathException(ErrorInfo.REQUEST_BODY_ERROR);
+        }
+//        InputStream inputStream = null;
+//        String contentType = "";
+//        String originalFilename;
+//        String resourceFullPath = "";
+        try {
+            for (MultipartFile file : files) {
+                String originalFilename = file.getOriginalFilename();
+                String resourceFullPath = fullPath + originalFilename;
+                if (minioStorageService.isFileExists(resourceFullPath)) {
+                    log.error("File already exists: path = {}", originalFilename);
+                    throw new ResourceException(ErrorInfo.FILE_ALREADY_EXISTS);
+                }
+
+                InputStream inputStream = file.getInputStream();
+                String contentType = file.getContentType();
+                Long size = file.getSize();
+//                resourceFullPath = filePath;
+
+                minioStorageService.uploadFile(inputStream, resourceFullPath, contentType, size);
+                log.info("Uploaded resource: path = {}, size = {}", originalFilename, size);
+            }
+        } catch (IOException e) {
+            log.warn("Unexpected error while uploading folder: path = {}, error: {}", fullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+        }
+    }
 
     public List<ResourceResponseDto> searchResource(String username, String query) {
         String userRootFolder = userRootFolderManager.getUserRootFolder(username);

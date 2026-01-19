@@ -67,7 +67,7 @@ public class SecurityConfiguration {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.getWriter().write("""
-                    {"message": "Authentication is required"}
+                    {"message": "User is not authorized"}
                     """);
             log.warn("Unauthorized access attempt: path = {}, reason = {}", request.getRequestURI(), authException.getMessage());
         });

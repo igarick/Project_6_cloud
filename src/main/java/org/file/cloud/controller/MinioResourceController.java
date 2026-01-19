@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.nio.file.Path;
@@ -76,8 +77,8 @@ public class MinioResourceController {
 
     @GetMapping("/api/resource/move")
     public ResponseEntity<ResourceResponseDto> moveResource(@AuthenticationPrincipal UserDetails userDetails,
-                             @RequestParam String from,
-                             @RequestParam String to) {
+                                                            @RequestParam String from,
+                                                            @RequestParam String to) {
         if (!PathValidator.isValid(from) || !PathValidator.isValid(to)) {
             log.warn("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
@@ -96,5 +97,16 @@ public class MinioResourceController {
         }
         List<ResourceResponseDto> resourceResponseDtos = minioResourceService.searchResource(userDetails.getUsername(), query);
         return ResponseEntity.ok().body(resourceResponseDtos);
+    }
+
+    @PostMapping("/api/resource")
+    public void uploadResource(@AuthenticationPrincipal UserDetails userDetails,
+                               @RequestParam List<MultipartFile> files,
+                               @RequestParam String path) {
+        if (!PathValidator.isValid(path) && !path.endsWith("/")) {
+            log.warn("Invalid or empty path");
+            throw new InvalidOrEmptyPathException(ErrorInfo.REQUEST_BODY_ERROR);
+        }
+        minioResourceService.uploadResource(userDetails.getUsername(), path, files);
     }
 }

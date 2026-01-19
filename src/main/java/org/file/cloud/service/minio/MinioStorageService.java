@@ -1,7 +1,7 @@
 package org.file.cloud.service.minio;
 
 import io.minio.*;
-import io.minio.errors.*;
+import io.minio.errors.ErrorResponseException;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
@@ -21,6 +21,22 @@ public class MinioStorageService {
     private final MinioClient minioClient;
 
     private final String MAIN_BUCKET = "user-files";
+
+    public void uploadFile(InputStream inputStream, String resourceFullPath, String contentType, Long size) {
+        try {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(MAIN_BUCKET)
+                            .object(resourceFullPath)
+                            .stream(
+                                    inputStream, size, -1)
+                            .contentType(contentType)
+                            .build());
+        } catch (Exception e) {
+            log.error("Unexpected error while putting file: resourceFullPath = {}, error: {}", resourceFullPath, e.getMessage(), e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+        }
+    }
 
     public void moveFile(String from, String to) {
         try {
