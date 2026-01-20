@@ -2,8 +2,9 @@ package org.file.cloud.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.dto.folder.ResourceResponseDto;
+import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.exception.ErrorInfo;
+import org.file.cloud.exception.folder.ResourceException;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
 import org.file.cloud.service.MinioDirectoryService;
 import org.file.cloud.service.StorageResourceValidator;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -26,18 +29,28 @@ public class MinioDirectoryController {
 
 
     @GetMapping("/api/directory")
-    public void showFolderContents(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
-
+    public ResponseEntity<List<ResponseResourceDto>> showFolderContent(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
+        if (!path.endsWith("/") || !PathValidator.isValid(path)) {
+            log.warn("Invalid or empty path: path = {}", path);
+            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
+        }
+        boolean folderExists = storageResourceValidator.isFolderExists(userDetails.getUsername(), path);
+        if (!folderExists) {
+            log.error("Folder does not exist: path = {}", path);
+            throw new ResourceException(ErrorInfo.FOLDER_DOES_NOT_EXIST);
+        }
+        List<ResponseResourceDto> responseDto = minioDirectoryService.showFolderContent(userDetails.getUsername(), path);
+        return ResponseEntity.ok().body(responseDto);
     }
 
     @PostMapping("/api/directory")
-    public ResponseEntity<ResourceResponseDto> getInfoDirectory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
+    public ResponseEntity<ResponseResourceDto> createFolder(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
         if (!path.endsWith("/") || !PathValidator.isValid(path)) {
             log.warn("Invalid or empty path to the new folder: path = {}", path);
             throw new InvalidOrEmptyPathException(ErrorInfo.NEW_FOLDER_PATH_ERROR);
         }
         storageResourceValidator.validateFolderExistence(userDetails.getUsername(), path);
-        ResourceResponseDto folderDto = minioDirectoryService.createFolder(userDetails.getUsername(), path);
+        ResponseResourceDto folderDto = minioDirectoryService.createFolder(userDetails.getUsername(), path);
         return ResponseEntity.status(HttpStatus.CREATED).body(folderDto);
     }
 }

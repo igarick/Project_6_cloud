@@ -109,18 +109,22 @@ public class MinioStorageService {
         }
     }
 
-    public Iterable<Result<Item>> getObjects(String fullPath) {
+    public Iterable<Result<Item>> getObjects(String fullPath, boolean recursive) {
         try {
             return minioClient.listObjects(
                     ListObjectsArgs.builder()
                             .bucket(MAIN_BUCKET)
                             .prefix(fullPath)
-                            .recursive(true)
+                            .recursive(recursive)
                             .build());
         } catch (Exception e) {
             log.warn("Unexpected error while getting list objects: path = {}, error: {}", fullPath, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
+    }
+
+    public Iterable<Result<Item>> getObjects(String fullPath) {
+        return getObjects(fullPath, true);
     }
 
     public Iterable<Result<DeleteError>> removeObjects(List<DeleteObject> objects) {
@@ -169,6 +173,5 @@ public class MinioStorageService {
             log.error("Unexpected error while creating folder - {}. Error: {}", path, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
-        log.info("Created folder: path = {}", path);
     }
 }

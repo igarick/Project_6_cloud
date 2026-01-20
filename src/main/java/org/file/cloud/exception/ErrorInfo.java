@@ -32,6 +32,7 @@ public enum ErrorInfo {
     PARENT_FOLDER_DOES_NOT_EXIST("The parent folder does not exist", SC_NOT_FOUND),
 //    INVALID_FOLDER_NAME("Name must not contain symbols: \\ / : * ?  < > |", SC_BAD_REQUEST),
     FOLDER_ALREADY_EXISTS("Folder already exists", SC_CONFLICT),
+    FOLDER_DOES_NOT_EXIST("Folder does not exist", SC_NOT_FOUND),
     REQUEST_BODY_ERROR("Invalid request body", SC_BAD_REQUEST),
 
     // resource

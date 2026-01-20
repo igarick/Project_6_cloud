@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResourceResponseDto {
+public class ResponseResourceDto {
     private String path;
     private String name;
     private Long size;

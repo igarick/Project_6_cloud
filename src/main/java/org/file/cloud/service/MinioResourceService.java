@@ -7,7 +7,7 @@ import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.builder.ResponseDtoBuilder;
-import org.file.cloud.dto.folder.ResourceResponseDto;
+import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
@@ -36,46 +36,52 @@ public class MinioResourceService {
     private final ResponseDtoBuilder responseDtoBuilder;
     private final UserRootFolderManager userRootFolderManager;
 
-    public void uploadResource(String username, String path, List<MultipartFile> files) {
+    public List<ResponseResourceDto> uploadResource(String username, String path, List<MultipartFile> files) {
         String userRootFolder = userRootFolderManager.getUserRootFolder(username);
-        String fullPath = userRootFolder + path;
-        if (!minioStorageService.isFolderExists(fullPath)) {
-            log.error("Folder does not exists: path = {}", fullPath);
+        String fullPathDirectoryForDownload = userRootFolder + path;
+        if (!minioStorageService.isFolderExists(fullPathDirectoryForDownload)) {
+            log.error("Folder does not exists: path = {}", fullPathDirectoryForDownload);
             throw new InvalidOrEmptyPathException(ErrorInfo.REQUEST_BODY_ERROR);
         }
-//        InputStream inputStream = null;
-//        String contentType = "";
-//        String originalFilename;
-//        String resourceFullPath = "";
+        List<ResponseResourceDto> result = new ArrayList<>();
         try {
             for (MultipartFile file : files) {
                 String originalFilename = file.getOriginalFilename();
-                String resourceFullPath = fullPath + originalFilename;
-                if (minioStorageService.isFileExists(resourceFullPath)) {
+                log.info("originalFilename = {}", originalFilename);
+                String fullResourcePath = fullPathDirectoryForDownload + originalFilename;
+                log.info("fullResourcePath = {}", fullResourcePath);
+
+                if (minioStorageService.isFileExists(fullResourcePath)) {
                     log.error("File already exists: path = {}", originalFilename);
                     throw new ResourceException(ErrorInfo.FILE_ALREADY_EXISTS);
                 }
-
                 InputStream inputStream = file.getInputStream();
                 String contentType = file.getContentType();
-                Long size = file.getSize();
-//                resourceFullPath = filePath;
+                log.info("contentType = {}", contentType);
 
-                minioStorageService.uploadFile(inputStream, resourceFullPath, contentType, size);
+                Long size = file.getSize();
+
+                minioStorageService.uploadFile(inputStream, fullResourcePath, contentType, size);
                 log.info("Uploaded resource: path = {}, size = {}", originalFilename, size);
+
+                String fullPath = path + originalFilename;
+                result.add(responseDtoBuilder.buildResourceDto(username, fullPath));
             }
         } catch (IOException e) {
-            log.warn("Unexpected error while uploading folder: path = {}, error: {}", fullPath, e.getMessage(), e);
+            log.warn("Unexpected error while uploading folder: path = {}, error: {}", fullPathDirectoryForDownload, e.getMessage(), e);
             throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
+        return result;
     }
 
-    public List<ResourceResponseDto> searchResource(String username, String query) {
+
+
+    public List<ResponseResourceDto> searchResource(String username, String query) {
         String userRootFolder = userRootFolderManager.getUserRootFolder(username);
         log.info("userRootFolder = " + userRootFolder);
         Iterable<Result<Item>> objects = minioStorageService.getObjects(userRootFolder);
 
-        List<ResourceResponseDto> result = new ArrayList<>();
+        List<ResponseResourceDto> result = new ArrayList<>();
         try {
             for (Result<Item> object : objects) {
                 String objectName = object.get().objectName();
@@ -167,7 +173,7 @@ public class MinioResourceService {
         }
     }
 
-    public ResourceResponseDto moveResource(String username, String from, String to) {
+    public ResponseResourceDto moveResource(String username, String from, String to) {
         String parentFolderPathFrom = pathService.extractParentFolderPath(from);
 
         storageResourceValidator.validateParentFolderExistence(username, to);

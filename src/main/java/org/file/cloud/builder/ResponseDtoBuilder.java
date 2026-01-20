@@ -3,7 +3,7 @@ package org.file.cloud.builder;
 import io.minio.GetObjectAttributesResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.dto.folder.ResourceResponseDto;
+import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.service.PathService;
 import org.file.cloud.service.minio.MinioStorageService;
 import org.file.cloud.util.resource.ResourceType;
@@ -16,7 +16,7 @@ public class ResponseDtoBuilder {
     private final PathService pathService;
     private final MinioStorageService minioStorageService;
 
-    public ResourceResponseDto buildResourceDto(String username, String resourcePath) {
+    public ResponseResourceDto buildResourceDto(String username, String resourcePath) {
         String parentFolderPath = pathService.extractParentFolderPath(resourcePath);
         String fullPath = pathService.getFullPath(username, resourcePath);
 
@@ -32,7 +32,7 @@ public class ResponseDtoBuilder {
             type = ResourceType.DIRECTORY.name();
         }
         log.info("Collected resource DTO: parentPath - {}, name - {}, size - {}, type - {}", parentFolderPath, name, size, type);
-        return ResourceResponseDto.builder()
+        return ResponseResourceDto.builder()
                 .path(parentFolderPath)
                 .name(name)
                 .size(size)
@@ -73,11 +73,11 @@ public class ResponseDtoBuilder {
         return objectSize;
     }
 
-    public ResourceResponseDto buildFolderDto(String resourcePath) {
+    public ResponseResourceDto buildFolderDto(String resourcePath) {
         String parentFolderPath = pathService.extractParentFolderPath(resourcePath);
         String name = getFolderName(parentFolderPath, resourcePath);
         log.info("Collected folder DTO: path - {}, name - {}, type - {}", parentFolderPath, name, ResourceType.DIRECTORY.name());
-        return ResourceResponseDto.builder()
+        return ResponseResourceDto.builder()
                 .path(parentFolderPath)
                 .name(name)
                 .type(ResourceType.DIRECTORY.name())
