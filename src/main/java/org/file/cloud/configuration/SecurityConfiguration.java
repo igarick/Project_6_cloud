@@ -32,8 +32,9 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in").permitAll()
-                                .anyRequest().authenticated()
+                        .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in").permitAll()
+                        .requestMatchers("/", "/index.html", "/config.js", "/assets/**", "/*.ico").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session

@@ -28,7 +28,7 @@ public class ResponseDtoBuilder {
             size = getFileSize(fullPath);
             type = ResourceType.FILE.name();
         } else {
-            name = getFolderName(parentFolderPath, resourcePath);
+            name = getFolderName(parentFolderPath, resourcePath) + "/";
             type = ResourceType.DIRECTORY.name();
         }
         log.info("Collected resource DTO: parentPath - {}, name - {}, size - {}, type - {}", parentFolderPath, name, size, type);

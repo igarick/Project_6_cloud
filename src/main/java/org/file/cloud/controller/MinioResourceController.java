@@ -101,12 +101,16 @@ public class MinioResourceController {
 
     @PostMapping("/api/resource")
     public ResponseEntity<List<ResponseResourceDto>> uploadResource(@AuthenticationPrincipal UserDetails userDetails,
-                               @RequestParam List<MultipartFile> files,
-                               @RequestParam String path) {
-        if (!PathValidator.isValid(path) || !path.endsWith("/")) {
-            log.error("Invalid or empty path");
-            throw new InvalidOrEmptyPathException(ErrorInfo.REQUEST_BODY_ERROR);
-        }
+//                               @RequestParam("object") List<MultipartFile> files,
+                               @RequestParam("object") MultipartFile[] files,
+                               @RequestParam("path") String path) {
+        log.info("Enter in PostMapping - /api/resource ");
+//        if (!PathValidator.isValid(path) || !path.endsWith("/")) {
+//            log.error("Invalid or empty path");
+//            throw new InvalidOrEmptyPathException(ErrorInfo.REQUEST_BODY_ERROR);
+//        }
+//        log.info("All valid");
+
         List<ResponseResourceDto> responseDto = minioResourceService.uploadResource(userDetails.getUsername(), path, files);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
