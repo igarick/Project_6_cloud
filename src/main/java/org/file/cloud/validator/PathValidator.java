@@ -9,6 +9,7 @@ public class PathValidator {
     private static final String VALID_FOLDER_NAME_PATTERN = "^[^\\\\/:*?\"<>|]+$";
     private static final int MAX_PATH_LENGTH = 255;
 
+//    public static boolean
     public static boolean isValid(String path) {
         log.info("Start validation the path = {}", path);
         if (path == null || path.isBlank()) {

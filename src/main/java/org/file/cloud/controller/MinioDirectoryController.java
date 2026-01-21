@@ -37,6 +37,10 @@ public class MinioDirectoryController {
 //            log.warn("Invalid or empty path: path = {}", path);
 //            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
 //        }
+
+        log.info("---------------------------Enter = /api/directory, path = {}", path);
+
+
         boolean folderExists = storageResourceValidator.isFolderExists(userDetails.getUsername(), path);
         if (!folderExists) {
             log.error("Folder does not exist: path = {}", path);
