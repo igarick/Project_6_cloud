@@ -27,19 +27,12 @@ public class MinioDirectoryController {
     private final MinioDirectoryService minioDirectoryService;
     private final StorageResourceValidator storageResourceValidator;
 
-
     @GetMapping("/api/directory")
     public ResponseEntity<List<ResponseResourceDto>> showFolderContent(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
-//        if (!path.endsWith("/") || !PathValidator.isValid(path)) {
-//        if (!PathValidator.isValid(path)) {
-//        if (!path.isEmpty()) {
-//
-//            log.warn("Invalid or empty path: path = {}", path);
-//            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
-//        }
-
-        log.info("---------------------------Enter = /api/directory, path = {}", path);
-
+        if (!PathValidator.isValidPathOrRoot(path)) {
+            log.warn("Invalid or empty path: path = {}", path);
+            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
+        }
 
         boolean folderExists = storageResourceValidator.isFolderExists(userDetails.getUsername(), path);
         if (!folderExists) {
@@ -52,7 +45,7 @@ public class MinioDirectoryController {
 
     @PostMapping("/api/directory")
     public ResponseEntity<ResponseResourceDto> createFolder(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
-        if (!path.endsWith("/") || !PathValidator.isValid(path)) {
+        if (!path.endsWith("/") || !PathValidator.isValidPath(path)) {
             log.warn("Invalid or empty path to the new folder: path = {}", path);
             throw new InvalidOrEmptyPathException(ErrorInfo.NEW_FOLDER_PATH_ERROR);
         }

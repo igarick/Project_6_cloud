@@ -9,20 +9,31 @@ public class PathValidator {
     private static final String VALID_FOLDER_NAME_PATTERN = "^[^\\\\/:*?\"<>|]+$";
     private static final int MAX_PATH_LENGTH = 255;
 
-//    public static boolean
-    public static boolean isValid(String path) {
+    public static boolean isValidPathOrRoot(String path) {
+        log.info("Start validation the path = {}", path);
+        if (path == null || path.isBlank()) {
+            log.info("Root directory: path = {}", path);
+            return true;
+        }
+        return isPathValidInternal(path);
+    }
+
+    public static boolean isValidPath(String path) {
         log.info("Start validation the path = {}", path);
         if (path == null || path.isBlank()) {
             log.warn("Empty path");
             return false;
         }
+        return isPathValidInternal(path);
+    }
 
+    private static boolean isPathValidInternal(String path) {
         if (path.startsWith("/") || path.contains("//")) {
-            log.warn("Invalid path formate");
+            log.warn("Invalid path format");
             return false;
         }
 
-        if (!isPathSegmentsValid(path)) {
+        if (!arePathSegmentsValid(path)) {
             log.warn("Invalid or empty path segment");
             return false;
         }
@@ -35,7 +46,7 @@ public class PathValidator {
         return true;
     }
 
-    private static boolean isPathSegmentsValid(String path) {
+    private static boolean arePathSegmentsValid(String path) {
         String[] pathSegments = path.split("/");
         for (String segment : pathSegments) {
             log.info("Path segment - {}", segment);
@@ -55,7 +66,7 @@ public class PathValidator {
     public static void validateForMove(String from, String to) {
         if (from.endsWith("/") && !to.endsWith("/") ||
             (!from.endsWith("/") && to.endsWith("/"))) {
-            log.warn("Cannot move: source and target types do not match (from = {}, to = {})", from, to);
+            log.warn("Source and target types do not match (from = {}, to = {})", from, to);
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
         if (from.endsWith("/") && to.startsWith(from) && !to.equals(from)) {

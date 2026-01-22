@@ -33,7 +33,7 @@ public class MinioResourceController {
 
     @GetMapping("/api/resource")
     public ResponseEntity<ResponseResourceDto> showResourceInfo(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
-        if (!PathValidator.isValid(path)) {
+        if (!PathValidator.isValidPath(path)) {
             log.error("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
@@ -45,29 +45,24 @@ public class MinioResourceController {
     @GetMapping("/api/resource/download")
     public ResponseEntity<StreamingResponseBody> downloadResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
         storageResourceValidator.ensureResourceExists(userDetails.getUsername(), path);
-
         Path fileName = Paths.get(path).getFileName();
         String contentDisposition;
-
         if (!path.endsWith("/")) {
             contentDisposition = String.format("attachment; filename=\"%s\"", fileName);
-//            log.info("File - {} was downloaded", path);
         } else {
             contentDisposition = String.format("attachment; filename=\"%s.zip\"", fileName);
-//            log.info("Folder - {} was downloaded", path);
         }
         StreamingResponseBody streamingResponseBody = minioResourceService.getFileStream(userDetails.getUsername(), path);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
                 .body(streamingResponseBody);
-
     }
 
     @DeleteMapping("/api/resource")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
-        if (!PathValidator.isValid(path)) {
+        if (!PathValidator.isValidPath(path)) {
             log.error("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
@@ -79,7 +74,7 @@ public class MinioResourceController {
     public ResponseEntity<ResponseResourceDto> moveResource(@AuthenticationPrincipal UserDetails userDetails,
                                                             @RequestParam String from,
                                                             @RequestParam String to) {
-        if (!PathValidator.isValid(from) || !PathValidator.isValid(to)) {
+        if (!PathValidator.isValidPath(from) || !PathValidator.isValidPath(to)) {
             log.error("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
         }
@@ -91,7 +86,7 @@ public class MinioResourceController {
 
     @GetMapping("/api/resource/search")
     public ResponseEntity<List<ResponseResourceDto>> searchResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String query) {
-        if (!PathValidator.isValid(query)) {
+        if (!PathValidator.isValidPath(query)) {
             log.error("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.SEARCH_QUERY_ERROR);
         }
@@ -103,13 +98,10 @@ public class MinioResourceController {
     public ResponseEntity<List<ResponseResourceDto>> uploadResource(@AuthenticationPrincipal UserDetails userDetails,
                                @RequestParam("object") MultipartFile[] files,
                                @RequestParam("path") String path) {
-        log.info("Enter in PostMapping - /api/resource ");
-        if (!PathValidator.isValid(path) || !path.endsWith("/")) {
+        if (!PathValidator.isValidPathOrRoot(path)) {    //  || !path.endsWith("/")
             log.error("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.REQUEST_BODY_ERROR);
         }
-        log.info("All valid");
-
         List<ResponseResourceDto> responseDto = minioResourceService.uploadResource(userDetails.getUsername(), path, files);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
