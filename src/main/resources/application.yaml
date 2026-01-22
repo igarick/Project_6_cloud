@@ -1,18 +1,28 @@
-#spring:
-#  application:
-#    name: pet - 6
-#
-#  datasource:
-#    url: jdbc:postgresql://localhost:5433/cloud_db
-#    username: cloud
-#    password: cloudyMe
-#    driver-class-name: org.postgresql.Driver
-#
-#  jpa:
-#    show-sql: true
-#    hibernate:
-#      ddl-auto: none
-#
-#  liquibase:
-#    enabled: true
-#
+spring:
+  application:
+    name: pet - 6
+
+  datasource:
+    url: jdbc:postgresql://localhost:5433/cloud_db
+    username: cloud
+    password: cloudyMe
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+
+  liquibase:
+    enabled: true
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+      enabled: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
