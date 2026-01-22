@@ -16,6 +16,7 @@ services:
       retries: 5
     volumes:
       - db-data:/var/lib/postgresql
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: my-pgadmin
@@ -30,6 +31,7 @@ services:
           condition: service_healthy
     volumes:
       - pgadmin-data:/var/lib/pgadmin
+
   minio:
     image: minio/minio:latest
     container_name: container-minio
@@ -48,11 +50,23 @@ services:
       - minio-data:/data
     command: server /data --console-address ":9001"
 
+  redis:
+    image: redis:7.2
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis-data:/data
 
 volumes:
   db-data:
   pgadmin-data:
   minio-data:
+  redis-data:
 
 
 
@@ -61,28 +75,5 @@ volumes:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-#      Для Redis:
-#
 #      healthcheck:
 #        test: [ "CMD", "redis-cli", "ping" ]
-
-#services:
-#  db-init:
-#    image: flyway
-#    command: migrate
-#    depends_on:
-#      db:
-#        condition: service_healthy

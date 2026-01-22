@@ -36,7 +36,6 @@ public class MinioResourceService {
     private final ResponseDtoBuilder responseDtoBuilder;
     private final UserRootFolderManager userRootFolderManager;
 
-//    public List<ResponseResourceDto> uploadResource(String username, String path, List<MultipartFile> files) {
     public List<ResponseResourceDto> uploadResource(String username, String path, MultipartFile[] files) {
         log.info("Start uploading resource in directory: path = {}", path);
         String userRootFolder = userRootFolderManager.getUserRootFolder(username);
@@ -51,7 +50,6 @@ public class MinioResourceService {
                 String originalFilename = file.getOriginalFilename();
                 log.info("Resource name = {}", originalFilename);
                 String fullResourcePath = fullPathDirectoryForDownload + originalFilename;
-                log.info("Resource path = {}", fullResourcePath);
 
                 if (minioStorageService.isFileExists(fullResourcePath)) {
                     log.error("File already exists: path = {}", originalFilename);
@@ -59,8 +57,6 @@ public class MinioResourceService {
                 }
                 InputStream inputStream = file.getInputStream();
                 String contentType = file.getContentType();
-                log.info("Resource contentType = {}", contentType);
-
                 Long size = file.getSize();
 
                 minioStorageService.uploadFile(inputStream, fullResourcePath, contentType, size);
@@ -75,8 +71,6 @@ public class MinioResourceService {
         }
         return result;
     }
-
-
 
     public List<ResponseResourceDto> searchResource(String username, String query) {
         String userRootFolder = userRootFolderManager.getUserRootFolder(username);
@@ -133,7 +127,6 @@ public class MinioResourceService {
 
     public StreamingResponseBody getFileStream(String username, String resourcePath) {
         String fullPath = pathService.getFullPath(username, resourcePath);
-
         if (!resourcePath.endsWith("/")) {
             return outputStream -> {
                 try (InputStream stream = minioStorageService.getObjectStream(fullPath)) {
