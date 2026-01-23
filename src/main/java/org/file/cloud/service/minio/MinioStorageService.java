@@ -20,7 +20,7 @@ import java.util.List;
 public class MinioStorageService {
     private final MinioClient minioClient;
 
-    private final String MAIN_BUCKET = "user-files";
+    private static final String MAIN_BUCKET = "user-files";
 
     public void uploadFile(InputStream inputStream, String resourceFullPath, String contentType, Long size) {
         try {

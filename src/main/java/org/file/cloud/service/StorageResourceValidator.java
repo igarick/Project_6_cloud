@@ -65,23 +65,40 @@ public class StorageResourceValidator {
         log.info("Parent folder exists: path = {}", fullParentPath);
     }
 
-    public void ensureFileDoesNotExist(String username, String resourcePath) {
-        String fullPath = pathService.getFullPath(username, resourcePath);
+    public void ensureFileDoesNotExist(String fullPath, String to) {
         if (minioStorageService.isFileExists(fullPath)) {
             log.info("File already exists: path = {}", fullPath);
-            throw new ResourceAlreadyExistsException(ErrorInfo.RESOURCE_ALREADY_EXISTS, resourcePath);
+            throw new ResourceAlreadyExistsException(ErrorInfo.RESOURCE_ALREADY_EXISTS, to);
         }
         log.info("File does not exist: path = {}", fullPath);
     }
 
-    public void ensureFolderDoesNotExist(String username, String resourcePath) {
-        String fullPath = pathService.getFullPath(username, resourcePath);
+
+//    public void ensureFileDoesNotExist(String username, String resourcePath) {
+//        String fullPath = pathService.getFullPath(username, resourcePath);
+//        if (minioStorageService.isFileExists(fullPath)) {
+//            log.info("File already exists: path = {}", fullPath);
+//            throw new ResourceAlreadyExistsException(ErrorInfo.RESOURCE_ALREADY_EXISTS, resourcePath);
+//        }
+//        log.info("File does not exist: path = {}", fullPath);
+//    }
+
+    public void ensureFolderDoesNotExist(String fullPath, String to) {
         if (minioStorageService.isFolderExists(fullPath)) {
             log.error("Folder already exists: path = {}", fullPath);
-            throw new ResourceException(ErrorInfo.FOLDER_ALREADY_EXISTS);
+            throw new ResourceAlreadyExistsException(ErrorInfo.RESOURCE_ALREADY_EXISTS, to);
         }
         log.info("Folder does not exist: path = {}", fullPath);
     }
+
+//    public void ensureFolderDoesNotExist(String username, String resourcePath) {
+//        String fullPath = pathService.getFullPath(username, resourcePath);
+//        if (minioStorageService.isFolderExists(fullPath)) {
+//            log.error("Folder already exists: path = {}", fullPath);
+//            throw new ResourceException(ErrorInfo.FOLDER_ALREADY_EXISTS);
+//        }
+//        log.info("Folder does not exist: path = {}", fullPath);
+//    }
 
     public boolean isFolderExists(String username, String resourcePath) {
         String fullPath = pathService.getFullPath(username, resourcePath);

@@ -4,8 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.dto.UserSignInDto;
-import org.file.cloud.dto.UserSignUpDto;
+import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.dto.UsernameDto;
 import org.file.cloud.exception.DaoException;
 import org.file.cloud.exception.DuplicateUserException;
@@ -13,13 +12,8 @@ import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.model.User;
 import org.file.cloud.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,46 +24,38 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    private final SecurityContextRepository securityContextRepository;
+    private final UserRootFolderManager userRootFolderManager;
+    private final AuthenticationService authenticationService;
 
     @Transactional
-    public UsernameDto signUp(UserSignUpDto userSignUpDto) {
+    public void signUp(RequestUserDto requestUserDto) {
+        String username = requestUserDto.getUsername();
         User user = User.builder()
-                .username(userSignUpDto.getUsername())
-                .password(passwordEncoder.encode(userSignUpDto.getPassword()))
+                .username(username)
+                .password(passwordEncoder.encode(requestUserDto.getPassword()))
                 .build();
         try {
             userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            log.warn("Failed to save user - {}. User already exists", userSignUpDto.getUsername());
+            log.warn("Failed to save user - {}. User already exists", username);
             throw new DuplicateUserException(ErrorInfo.USERNAME_DUPLICATE_ERROR, e);
         }
-        log.info("User - {} saved", userSignUpDto.getUsername());
-
-        return UsernameDto.builder()
-                .username(user.getUsername())
-                .build();
+        Long id = user.getId();
+        log.info("User id = {}", id);
+        userRootFolderManager.createUserRootFolder(user.getId());
+        log.info("Saved user = {}", username);
     }
 
-    public UsernameDto signIn(UserSignInDto userSignInDto, HttpServletRequest request, HttpServletResponse response) {
-        Authentication authenticationRequest = UsernamePasswordAuthenticationToken.unauthenticated(
-                userSignInDto.getUsername(), userSignInDto.getPassword());
-        Authentication authenticationResponse = authenticationManager.authenticate(authenticationRequest);
-
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authenticationResponse);
-        SecurityContextHolder.setContext(context);
-        securityContextRepository.saveContext(context, request, response);
-        log.info("User = {} is authenticated", userSignInDto.getUsername());
+    public UsernameDto signIn(RequestUserDto requestUserDto, HttpServletRequest request, HttpServletResponse response) {
+        Authentication authenticate = authenticationService.authenticate(requestUserDto, request, response);
 
         return UsernameDto.builder()
-                .username(userSignInDto.getUsername())
+                .username(authenticate.getName())
                 .build();
     }
 
     public Long getUserId(String username) {
-        User user = userRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> {
             log.warn("User - {} not found", username);
             return new DaoException(ErrorInfo.USER_NOT_FOUND);
         });

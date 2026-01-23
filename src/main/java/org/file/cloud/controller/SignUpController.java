@@ -1,26 +1,17 @@
 package org.file.cloud.controller;
 
-import io.minio.MinioClient;
-import io.minio.messages.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.dto.UserSignInDto;
-import org.file.cloud.dto.UserSignUpDto;
+import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.dto.UsernameDto;
 import org.file.cloud.service.UserService;
-import org.file.cloud.service.UserRootFolderManager;
 import org.file.cloud.validator.RequestValidator;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.OK;
@@ -31,34 +22,25 @@ import static org.springframework.http.HttpStatus.OK;
 public class SignUpController {
     private final UserService userService;
 
-    private final MinioClient minioClient;
-    private final UserRootFolderManager userRootFolderManager;
 
     @PostMapping("/api/auth/sign-up")
-    public ResponseEntity<UsernameDto> signUpUser(@RequestBody UserSignUpDto userSignUpDto) {
-        RequestValidator.validateSignUpInput(userSignUpDto);
-        UsernameDto usernameDto = userService.signUp(userSignUpDto);
-        userRootFolderManager.createUserRootFolder(usernameDto);
+    public ResponseEntity<UsernameDto> signUpUser(
+            @RequestBody RequestUserDto requestUserDto,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        RequestValidator.validateUserParams(requestUserDto);
+        userService.signUp(requestUserDto);
+        UsernameDto usernameDto = userService.signIn(requestUserDto, request, response);
         return ResponseEntity.status(CREATED).body(usernameDto);
     }
 
     @PostMapping("/api/auth/sign-in")
     public ResponseEntity<UsernameDto> signInUser(
-            @RequestBody UserSignInDto userSignInDto,
+            @RequestBody RequestUserDto requestUserDto,
             HttpServletRequest request,
             HttpServletResponse response) {
-        RequestValidator.validateSignInInput(userSignInDto);
-        UsernameDto usernameDto = userService.signIn(userSignInDto, request, response);
+        RequestValidator.validateUserParams(requestUserDto);
+        UsernameDto usernameDto = userService.signIn(requestUserDto, request, response);
         return ResponseEntity.status(OK).body(usernameDto);
-    }
-
-    @GetMapping("/authorised")
-    public void authorised(@AuthenticationPrincipal UserDetails userDetails) throws Exception {
-
-        List<Bucket> buckets = minioClient.listBuckets();
-
-        buckets.forEach(bucket -> System.out.println(bucket.name()));
-
-        log.info("Test authorization. User = {}", userDetails.getUsername());
     }
 }

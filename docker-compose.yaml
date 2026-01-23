@@ -52,6 +52,7 @@ services:
 
   redis:
     image: redis:7.2
+    container_name: container-session-redis
     ports:
       - "6379:6379"
     healthcheck:
@@ -74,6 +75,3 @@ volumes:
 
 
 
-
-#      healthcheck:
-#        test: [ "CMD", "redis-cli", "ping" ]

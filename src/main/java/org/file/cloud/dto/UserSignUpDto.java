@@ -12,5 +12,5 @@ import lombok.ToString;
 public class UserSignUpDto {
     private String username;
     private String password;
-    private String confirmPassword;
+//    private String confirmPassword;
 }

@@ -1,10 +1,12 @@
 package org.file.cloud.controller;
 
+import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.dto.UserSignUpDto;
 import org.file.cloud.exception.DuplicateUserException;
 import org.file.cloud.model.User;
 import org.file.cloud.repository.UserRepository;
 import org.file.cloud.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,7 +22,6 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Testcontainers
-@Transactional
 class SignUpControllerTest {
 
     @Container
@@ -33,26 +34,33 @@ class SignUpControllerTest {
     @Autowired
     UserRepository userRepository;
 
+    @BeforeEach
+    void cleanupDatabase() {
+        userRepository.deleteAll();
+    }
+
     @Test
     void shouldPersistUser_whenCreatingNewUser() {
-        UserSignUpDto userSignUpDto = UserSignUpDto.builder()
+        RequestUserDto requestUserDto = RequestUserDto.builder()
                 .username("Robert")
                 .password("Robert")
                 .build();
-        userService.signUp(userSignUpDto);
+        userService.signUp(requestUserDto);
         User user = userRepository.findByUsername("Robert").orElseThrow();
         assertThat(user.getUsername()).isEqualTo("Robert");
     }
 
     @Test
     void shouldThrowDuplicateException_whenUserAlreadyExists() {
-        UserSignUpDto userSignUpDto = UserSignUpDto.builder()
+        RequestUserDto requestUserDto = RequestUserDto.builder()
                 .username("Tom")
                 .password("Tom")
                 .build();
-        userService.signUp(userSignUpDto);
-        assertThatExceptionOfType(DuplicateUserException.class).isThrownBy(() -> userService.signUp(userSignUpDto));
+        userService.signUp(requestUserDto);
+        assertThatExceptionOfType(DuplicateUserException.class).isThrownBy(() -> userService.signUp(requestUserDto));
     }
+
+
 }
 
 

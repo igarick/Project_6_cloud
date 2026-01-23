@@ -22,6 +22,7 @@ public class MinioDirectoryService {
     private final PathService pathService;
     private final ResponseDtoBuilder responseDtoBuilder;
     private final UserRootFolderManager userRootFolderManager;
+    private final UserService userService;
 
     public ResponseResourceDto createFolder(String username, String resourcePath) {
         String fullPath = pathService.getFullPath(username, resourcePath);
@@ -32,7 +33,8 @@ public class MinioDirectoryService {
     }
 
     public List<ResponseResourceDto> showFolderContent(String username, String path) {
-        String userRootFolder = userRootFolderManager.getUserRootFolder(username);
+        Long userId = userService.getUserId(username);
+        String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         String fullPath = userRootFolder + path;
         log.info("fullPath = " + fullPath);
         Iterable<Result<Item>> objects = minioStorageService.getObjects(fullPath, false);

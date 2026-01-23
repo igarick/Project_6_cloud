@@ -2,8 +2,7 @@ package org.file.cloud.validator;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.dto.UserSignInDto;
-import org.file.cloud.dto.UserSignUpDto;
+import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.exception.RequestValidationException;
 import org.file.cloud.exception.ErrorInfo;
 import org.springframework.util.StringUtils;
@@ -14,26 +13,9 @@ public class RequestValidator {
     private static final String NAME_PATTERN = "^[a-zA-Z0-9]{5,15}$";
     private static final String PASSWORD_PATTERN = "^\\S{5,15}$";
 
-    public void validateSignUpInput(UserSignUpDto userSignUpDto) {
-        String name = userSignUpDto.getUsername();
-        String password = userSignUpDto.getPassword();
-        String confirmPassword = userSignUpDto.getConfirmPassword();
-
-        if (!StringUtils.hasText(name) ||
-            !StringUtils.hasText(password) ||
-            !StringUtils.hasText(confirmPassword)) {
-            log.warn("Empty name or password field");
-            throw new RequestValidationException(ErrorInfo.EMPTY_FIELD_ERROR);
-        }
-        validateName(name);
-        validatePassword(password);
-        validatePasswordMatches(password, confirmPassword);
-        log.info("Valid params: name - {}, password - {}, confirmPassword - {}", name, password, confirmPassword);
-    }
-
-    public void validateSignInInput(UserSignInDto userSignInDto) {
-        String name = userSignInDto.getUsername();
-        String password = userSignInDto.getPassword();
+    public void validateUserParams(RequestUserDto requestUserDto) {
+        String name = requestUserDto.getUsername();
+        String password = requestUserDto.getPassword();
 
         if (!StringUtils.hasText(name) ||
             !StringUtils.hasText(password)) {
@@ -42,6 +24,7 @@ public class RequestValidator {
         }
         validateName(name);
         validatePassword(password);
+
         log.info("Valid params: name - {}, password - {}", name, password);
     }
 
@@ -59,10 +42,4 @@ public class RequestValidator {
         }
     }
 
-    private void validatePasswordMatches(String password, String confirmPassword) {
-        if (!password.equals(confirmPassword)) {
-            log.warn("Passwords don't match");
-            throw new RequestValidationException(ErrorInfo.PASSWORD_MATCHES_ERROR);
-        }
-    }
 }

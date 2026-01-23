@@ -35,10 +35,12 @@ public class MinioResourceService {
     private final StorageResourceValidator storageResourceValidator;
     private final ResponseDtoBuilder responseDtoBuilder;
     private final UserRootFolderManager userRootFolderManager;
+    private final UserService userService;
 
     public List<ResponseResourceDto> uploadResource(String username, String path, MultipartFile[] files) {
         log.info("Start uploading resource in directory: path = {}", path);
-        String userRootFolder = userRootFolderManager.getUserRootFolder(username);
+        Long userId = userService.getUserId(username);
+        String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         String fullPathDirectoryForDownload = userRootFolder + path;
         if (!minioStorageService.isFolderExists(fullPathDirectoryForDownload)) {
             log.error("Folder does not exists: path = {}", fullPathDirectoryForDownload);
@@ -73,7 +75,8 @@ public class MinioResourceService {
     }
 
     public List<ResponseResourceDto> searchResource(String username, String query) {
-        String userRootFolder = userRootFolderManager.getUserRootFolder(username);
+        Long userId = userService.getUserId(username);
+        String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         log.info("userRootFolder = " + userRootFolder);
         Iterable<Result<Item>> objects = minioStorageService.getObjects(userRootFolder);
 
@@ -177,13 +180,14 @@ public class MinioResourceService {
         String fullPathFrom = pathService.getFullPath(username, from);
         log.info("Full path From = {}", fullPathFrom);
 
-        if (from.endsWith("/") && to.endsWith("/")) {
-            storageResourceValidator.ensureFolderDoesNotExist(username, to);
-        } else {
-            storageResourceValidator.ensureFileDoesNotExist(username, to);
-        }
         String fullPathTo = pathService.getFullPath(username, to);
         log.info("Full path To = {}", fullPathTo);
+
+        if (from.endsWith("/") && to.endsWith("/")) {
+            storageResourceValidator.ensureFolderDoesNotExist(fullPathTo, to);
+        } else {
+            storageResourceValidator.ensureFileDoesNotExist(fullPathTo, to);
+        }
 
         String resourceNameFrom = Path.of(from).getFileName().toString();
         String resourceNameTo = Path.of(to).getFileName().toString();

@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PathService {
     private final UserRootFolderManager userRootFolderManager;
+    private final UserService userService;
 
     public String getFullPath(String username, String resourcePath) {
-        String userRootFolder = userRootFolderManager.getUserRootFolder(username);
+        Long userId = userService.getUserId(username);
+        String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         return userRootFolder + resourcePath;
     }
 
