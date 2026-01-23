@@ -11,6 +11,7 @@ import org.file.cloud.validator.RequestValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.springframework.http.HttpStatus.CREATED;
@@ -19,11 +20,11 @@ import static org.springframework.http.HttpStatus.OK;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/auth")
 public class SignUpController {
     private final UserService userService;
 
-
-    @PostMapping("/api/auth/sign-up")
+    @PostMapping("/sign-up")
     public ResponseEntity<UsernameDto> signUpUser(
             @RequestBody RequestUserDto requestUserDto,
             HttpServletRequest request,
@@ -34,7 +35,7 @@ public class SignUpController {
         return ResponseEntity.status(CREATED).body(usernameDto);
     }
 
-    @PostMapping("/api/auth/sign-in")
+    @PostMapping("/sign-in")
     public ResponseEntity<UsernameDto> signInUser(
             @RequestBody RequestUserDto requestUserDto,
             HttpServletRequest request,

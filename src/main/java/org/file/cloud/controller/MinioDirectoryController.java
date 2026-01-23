@@ -13,21 +13,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/directory")
 public class MinioDirectoryController {
     private final MinioDirectoryService minioDirectoryService;
     private final StorageResourceValidator storageResourceValidator;
 
-    @GetMapping("/api/directory")
+    @GetMapping
     public ResponseEntity<List<ResponseResourceDto>> showFolderContent(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
         if (!PathValidator.isValidPathOrRoot(path)) {
             log.warn("Invalid or empty path: path = {}", path);
@@ -43,7 +41,7 @@ public class MinioDirectoryController {
         return ResponseEntity.ok().body(responseDto);
     }
 
-    @PostMapping("/api/directory")
+    @PostMapping
     public ResponseEntity<ResponseResourceDto> createFolder(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
         if (!path.endsWith("/") || !PathValidator.isValidPath(path)) {
             log.warn("Invalid or empty path to the new folder: path = {}", path);

@@ -26,12 +26,13 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/resource")
 public class MinioResourceController {
     private final MinioResourceService minioResourceService;
     private final ResponseDtoBuilder responseDtoBuilder;
     private final StorageResourceValidator storageResourceValidator;
 
-    @GetMapping("/api/resource")
+    @GetMapping
     public ResponseEntity<ResponseResourceDto> showResourceInfo(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
         if (!PathValidator.isValidPath(path)) {
             log.error("Invalid or empty path");
@@ -42,7 +43,7 @@ public class MinioResourceController {
         return ResponseEntity.status(HttpStatus.OK).body(responseResourceDto);
     }
 
-    @GetMapping("/api/resource/download")
+    @GetMapping("/download")
     public ResponseEntity<StreamingResponseBody> downloadResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
         storageResourceValidator.ensureResourceExists(userDetails.getUsername(), path);
         Path fileName = Paths.get(path).getFileName();
@@ -59,7 +60,7 @@ public class MinioResourceController {
                 .body(streamingResponseBody);
     }
 
-    @DeleteMapping("/api/resource")
+    @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
         if (!PathValidator.isValidPath(path)) {
@@ -70,7 +71,7 @@ public class MinioResourceController {
         minioResourceService.deleteResource(userDetails.getUsername(), path);
     }
 
-    @GetMapping("/api/resource/move")
+    @GetMapping("/move")
     public ResponseEntity<ResponseResourceDto> moveResource(@AuthenticationPrincipal UserDetails userDetails,
                                                             @RequestParam String from,
                                                             @RequestParam String to) {
@@ -84,7 +85,7 @@ public class MinioResourceController {
         return ResponseEntity.ok().body(responseResourceDto);
     }
 
-    @GetMapping("/api/resource/search")
+    @GetMapping("/search")
     public ResponseEntity<List<ResponseResourceDto>> searchResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String query) {
         if (!PathValidator.isValidPath(query)) {
             log.error("Invalid or empty path");
@@ -94,7 +95,7 @@ public class MinioResourceController {
         return ResponseEntity.ok().body(responseResourceDtos);
     }
 
-    @PostMapping("/api/resource")
+    @PostMapping
     public ResponseEntity<List<ResponseResourceDto>> uploadResource(@AuthenticationPrincipal UserDetails userDetails,
                                @RequestParam("object") MultipartFile[] files,
                                @RequestParam("path") String path) {
