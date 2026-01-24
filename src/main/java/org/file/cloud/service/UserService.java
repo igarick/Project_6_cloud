@@ -13,6 +13,8 @@ import org.file.cloud.model.User;
 import org.file.cloud.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRootFolderManager userRootFolderManager;
     private final AuthenticationService authenticationService;
+    private final SecurityContextHolderStrategy securityContextHolderStrategy;
 
     @Transactional
     public void signUp(RequestUserDto requestUserDto) {
@@ -52,6 +55,10 @@ public class UserService {
         return UsernameDto.builder()
                 .username(authenticate.getName())
                 .build();
+    }
+
+    public void signOut() {
+        securityContextHolderStrategy.clearContext();
     }
 
     public Long getUserId(String username) {

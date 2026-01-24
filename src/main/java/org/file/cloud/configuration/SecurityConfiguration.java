@@ -13,6 +13,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -73,5 +75,10 @@ public class SecurityConfiguration {
                     """);
             log.warn("Unauthorized access attempt: path = {}, reason = {}", request.getRequestURI(), authException.getMessage());
         });
+    }
+
+    @Bean
+    public SecurityContextHolderStrategy securityContextHolderStrategy() {
+        return SecurityContextHolder.getContextHolderStrategy();
     }
 }

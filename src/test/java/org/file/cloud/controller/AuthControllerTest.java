@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @Testcontainers
-class SignUpControllerTest {
+class AuthControllerTest {
 
     @Container
     @ServiceConnection

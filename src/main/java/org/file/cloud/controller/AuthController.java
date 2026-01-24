@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.controller.swagger.AuthSwagger;
 import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.dto.UsernameDto;
 import org.file.cloud.service.UserService;
@@ -21,7 +22,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
-public class SignUpController {
+public class AuthController implements AuthSwagger {
     private final UserService userService;
 
     @PostMapping("/sign-up")
@@ -43,5 +44,10 @@ public class SignUpController {
         RequestValidator.validateUserParams(requestUserDto);
         UsernameDto usernameDto = userService.signIn(requestUserDto, request, response);
         return ResponseEntity.status(OK).body(usernameDto);
+    }
+
+    @PostMapping("/sign-out")
+    public void signOut() {
+        userService.signOut();
     }
 }

@@ -22,7 +22,7 @@ public class AuthenticatedLogoutSuccessHandler implements LogoutSuccessHandler {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         if (authentication == null || !authentication.isAuthenticated()) {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
