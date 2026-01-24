@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.security.AuthenticatedLogoutSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,13 +33,19 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticatedLogoutSuccessHandler logoutHandler) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/sign-up", "/api/auth/sign-in").permitAll()
-                        .requestMatchers("/", "/index.html", "/config.js", "/assets/**", "/*.ico").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .anyRequest().authenticated()
+//                                .requestMatchers("/", "/static/**", "/index.html", "/config.js", "/assets/**", "/*.ico", "/login", "/registration", "/files/**").permitAll()
+//                                .requestMatchers("/", "/index.html", "/config.js", "/favicon.ico", "/assets/**").permitAll()
+                                .requestMatchers("/", "/index.html", "/static/**", "/favicon.ico", "/manifest.json", "/assets/**", "/config.js", "/login", "/registration", "/files/**").permitAll()
+//                                .requestMatchers("/api/auth/**").permitAll()
+//                                .requestMatchers("/", "/index.html", "/config.js", "/assets/**", "/login", "/registration", "/files/**").permitAll()
+                                .requestMatchers("/api/auth/sign-in", "/api/auth/sign-up").permitAll()
+//                                .requestMatchers("/**").permitAll()
+                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                                .anyRequest().authenticated()
                 )
+//                .formLogin(form -> form.loginProcessingUrl("/api/auth/sign-in"))
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)

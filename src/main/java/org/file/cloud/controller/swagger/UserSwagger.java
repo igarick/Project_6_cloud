@@ -32,7 +32,6 @@ public interface UserSwagger {
                             content = @Content(schema = @Schema(implementation = ErrorMessageDto.class))
                     )
             }
-
     )
     public ResponseEntity<UsernameDto> getUser(@AuthenticationPrincipal UserDetails userDetails);
 }

@@ -33,7 +33,7 @@ public class MinioResourceController {
     private final StorageResourceValidator storageResourceValidator;
 
     @GetMapping
-    public ResponseEntity<ResponseResourceDto> showResourceInfo(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
+    public ResponseEntity<ResponseResourceDto> showResourceInfo(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
         if (!PathValidator.isValidPath(path)) {
             log.error("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
