@@ -3,6 +3,7 @@ package org.file.cloud.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.builder.ResponseDtoBuilder;
+import org.file.cloud.controller.swagger.ResourceSwagger;
 import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
@@ -27,13 +28,13 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/resource")
-public class MinioResourceController {
+public class MinioResourceController implements ResourceSwagger {
     private final MinioResourceService minioResourceService;
     private final ResponseDtoBuilder responseDtoBuilder;
     private final StorageResourceValidator storageResourceValidator;
 
     @GetMapping
-    public ResponseEntity<ResponseResourceDto> showResourceInfo(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
+    public ResponseEntity<ResponseResourceDto> getResourceInfo(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
         if (!PathValidator.isValidPath(path)) {
             log.error("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
@@ -95,9 +96,12 @@ public class MinioResourceController {
         return ResponseEntity.ok().body(responseResourceDtos);
     }
 
-    @PostMapping
+//    @PostMapping
+    @PostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<List<ResponseResourceDto>> uploadResource(@AuthenticationPrincipal UserDetails userDetails,
-                               @RequestParam("object") MultipartFile[] files,
+                               @RequestPart("object") List<MultipartFile> files,
                                @RequestParam("path") String path) {
         if (!PathValidator.isValidPathOrRoot(path)) {    //  || !path.endsWith("/")
             log.error("Invalid or empty path");

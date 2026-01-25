@@ -37,7 +37,7 @@ public class MinioResourceService {
     private final UserRootFolderManager userRootFolderManager;
     private final UserService userService;
 
-    public List<ResponseResourceDto> uploadResource(String username, String path, MultipartFile[] files) {
+    public List<ResponseResourceDto> uploadResource(String username, String path, List<MultipartFile> files) {
         log.info("Start uploading resource in directory: path = {}", path);
         Long userId = userService.getUserId(username);
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
