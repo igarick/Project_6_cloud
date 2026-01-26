@@ -240,122 +240,64 @@ public interface ResourceSwagger {
     )
     public ResponseEntity<List<ResponseResourceDto>> searchResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String query);
 
-
     @Operation(
             summary = "Upload resources",
-            description = "Upload one or more files to the specified directory"
+            description = "Uploads one or more files to the specified directory path. " +
+                          "If path is empty or null, files will be uploaded to the root directory."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Files uploaded successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request body",
-                    content = @Content(schema = @Schema(implementation = ErrorMessageDto.class))),
-            @ApiResponse(responseCode = "401", description = "User is not authorized",
-                    content = @Content(schema = @Schema(implementation = ErrorMessageDto.class))),
-            @ApiResponse(responseCode = "409", description = "File already exists",
-                    content = @Content(schema = @Schema(implementation = ErrorMessageDto.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content(schema = @Schema(implementation = ErrorMessageDto.class)))
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Files uploaded successfully",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(
+                                    schema = @Schema(implementation = ResponseResourceDto.class))
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request body",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorMessageDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "User is not authorized",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorMessageDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "File already exists",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorMessageDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorMessageDto.class))
+            )
     })
+
     public ResponseEntity<List<ResponseResourceDto>> uploadResource(
             @AuthenticationPrincipal UserDetails userDetails,
             @Parameter(
-                    name = "object",
                     description = "Files to upload",
-                    required = true,
-                    content = @Content(
-                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                            array = @ArraySchema(
-                                    schema = @Schema(type = "string", format = "binary")
-                            )
-                    )
+                    required = true
             )
             @RequestPart("object") List<MultipartFile> files,
-
             @Parameter(
                     name = "path",
-                    description = "Target directory path (URL-encoded, must end with '/')",
-                    required = false
+                    description = "Target directory path. (URL-encoded, must end with '/')",
+                    allowEmptyValue = true
             )
-            @RequestPart("path") String path
-    );
-
-
-
-//    @Operation(
-//            summary = "Upload resources",
-//            description = "Upload files and folders (recursively) to the specified directory",
-//            parameters = {
-//                    @Parameter(
-//                            name = "path",
-//                            description = "Target directory path (URL-encoded, must end with '/')",
-//                            required = true,
-//                            in = ParameterIn.QUERY
-//                    )
-//            },
-////            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-////                    description = "One or more files to upload",
-////                    required = true,
-////                    content = @Content(
-////                            mediaType = "multipart/form-data",
-////                            schema = @Schema(type = "array", implementation = MultipartFile.class)
-////                    )
-////            ),
-//            requestBody = @RequestBody(
-//                    description = "One or more files to upload",
-//                    required = true,
-//                    content = @Content(
-//                            mediaType = "multipart/form-data",
-//                            schema = @Schema(type = "array", implementation = MultipartFile.class)
-//                    )
-//            ),
-//            responses = {
-//                    @ApiResponse(
-//                            responseCode = "201",
-//                            description = "Files uploaded successfully",
-//                            content = @Content(schema = @Schema(implementation = ResponseResourceDto.class))
-//                    ),
-//                    @ApiResponse(
-//                            responseCode = "400",
-//                            description = "Invalid request body",
-//                            content = @Content(schema = @Schema(implementation = ErrorMessageDto.class))
-//                    ),
-//                    @ApiResponse(
-//                            responseCode = "401",
-//                            description = "User is not authorized",
-//                            content = @Content(schema = @Schema(implementation = ErrorMessageDto.class))
-//                    ),
-//                    @ApiResponse(
-//                            responseCode = "409",
-//                            description = "File already exists",
-//                            content = @Content(schema = @Schema(implementation = ErrorMessageDto.class))
-//                    ),
-//                    @ApiResponse(
-//                            responseCode = "500",
-//                            description = "Internal server error",
-//                            content = @Content(schema = @Schema(implementation = ErrorMessageDto.class))
-//                    )
-//            }
-//    )
-//    public ResponseEntity<List<ResponseResourceDto>> uploadResource(
-//            @AuthenticationPrincipal UserDetails userDetails,
-////            @Parameter(
-////                    description = "Files to upload",
-////                    required = true,
-////                    content = @Content(
-////                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-////                            schema = @Schema(type = "string", implementation = MultipartFile.class))
-////            )
-//            @RequestPart("object") List<MultipartFile> files,
-////            @RequestParam("object") MultipartFile[] files,
-////            @Parameter(
-//////                    description = "Target directory path (URL-encoded, must end with '/')",
-//////                    required = true,
-////                    name = "path",
-////                    description = "Target directory path. (URL-encoded, must end with '/')",
-////                    required = true,
-////                    in = ParameterIn.QUERY
-////            )
-//            @RequestParam("path") String path);
+            @RequestParam("path") String path);
 }
 
 

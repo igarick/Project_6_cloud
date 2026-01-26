@@ -96,12 +96,12 @@ public class MinioResourceController implements ResourceSwagger {
         return ResponseEntity.ok().body(responseResourceDtos);
     }
 
-//    @PostMapping
     @PostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<List<ResponseResourceDto>> uploadResource(@AuthenticationPrincipal UserDetails userDetails,
                                @RequestPart("object") List<MultipartFile> files,
+//                               @RequestParam("path") String path) {
                                @RequestParam("path") String path) {
         if (!PathValidator.isValidPathOrRoot(path)) {    //  || !path.endsWith("/")
             log.error("Invalid or empty path");
