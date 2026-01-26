@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -47,12 +49,20 @@ public class MinioResourceController implements ResourceSwagger {
     @GetMapping("/download")
     public ResponseEntity<StreamingResponseBody> downloadResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
         storageResourceValidator.ensureResourceExists(userDetails.getUsername(), path);
+
+        //to do
+        // валидация пути на NULL и ""
+
         Path fileName = Paths.get(path).getFileName();
+        String name = fileName.toString();
+        String encode = URLEncoder.encode(name, StandardCharsets.UTF_8).replace("+", "%20");
         String contentDisposition;
         if (!path.endsWith("/")) {
-            contentDisposition = String.format("attachment; filename=\"%s\"", fileName);
+            contentDisposition = String.format("attachment; filename*=UTF_8''%s", encode);
+//            contentDisposition = String.format("attachment; filename=\"%s\"", encode);
         } else {
-            contentDisposition = String.format("attachment; filename=\"%s.zip\"", fileName);
+            contentDisposition = String.format("attachment; filename*=UTF_8''%s.zip", encode);
+//            contentDisposition = String.format("attachment; filename=\"%s.zip\"", encode);
         }
         StreamingResponseBody streamingResponseBody = minioResourceService.getFileStream(userDetails.getUsername(), path);
         return ResponseEntity.ok()
@@ -101,9 +111,8 @@ public class MinioResourceController implements ResourceSwagger {
     )
     public ResponseEntity<List<ResponseResourceDto>> uploadResource(@AuthenticationPrincipal UserDetails userDetails,
                                @RequestPart("object") List<MultipartFile> files,
-//                               @RequestParam("path") String path) {
                                @RequestParam("path") String path) {
-        if (!PathValidator.isValidPathOrRoot(path)) {    //  || !path.endsWith("/")
+        if (!PathValidator.isValidPathOrRoot(path)) {
             log.error("Invalid or empty path");
             throw new InvalidOrEmptyPathException(ErrorInfo.REQUEST_BODY_ERROR);
         }

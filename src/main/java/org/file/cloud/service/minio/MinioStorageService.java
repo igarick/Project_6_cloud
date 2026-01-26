@@ -119,7 +119,7 @@ public class MinioStorageService {
                             .build());
         } catch (Exception e) {
             log.warn("Unexpected error while getting list objects: path = {}, error: {}", fullPath, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
         }
     }
 

@@ -84,7 +84,10 @@ public interface ResourceSwagger {
                     @ApiResponse(
                             responseCode = "200",
                             description = "File or ZIP archive downloaded successfully",
-                            content = @Content(schema = @Schema(implementation = StreamingResponseBody.class))
+                            content = @Content(
+                                    mediaType = "application/octet-stream")
+//                                    mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+//                                    schema = @Schema(implementation = StreamingResponseBody.class))
                     ),
                     @ApiResponse(
                             responseCode = "400",

@@ -3,6 +3,7 @@ package org.file.cloud.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.ErrorMessageDto;
 import org.file.cloud.exception.folder.ResourceAlreadyExistsException;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,6 +18,7 @@ public class GlobalHandlerException {
     public ResponseEntity<ErrorMessageDto> handleBaseErrors(BaseException e) {
         return ResponseEntity
                 .status(e.getErrorInfo().getStatusCode())
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(new ErrorMessageDto(e.getErrorInfo().getErrorMessage()));
     }
 
