@@ -59,10 +59,8 @@ public class MinioResourceController implements ResourceSwagger {
         String contentDisposition;
         if (!path.endsWith("/")) {
             contentDisposition = String.format("attachment; filename*=UTF_8''%s", encode);
-//            contentDisposition = String.format("attachment; filename=\"%s\"", encode);
         } else {
             contentDisposition = String.format("attachment; filename*=UTF_8''%s.zip", encode);
-//            contentDisposition = String.format("attachment; filename=\"%s.zip\"", encode);
         }
         StreamingResponseBody streamingResponseBody = minioResourceService.getFileStream(userDetails.getUsername(), path);
         return ResponseEntity.ok()

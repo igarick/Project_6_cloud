@@ -2,6 +2,7 @@ package org.file.cloud.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.controller.swagger.DirectorySwagger;
 import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
@@ -21,7 +22,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/directory")
-public class MinioDirectoryController {
+public class MinioDirectoryController implements DirectorySwagger {
     private final MinioDirectoryService minioDirectoryService;
     private final StorageResourceValidator storageResourceValidator;
 
