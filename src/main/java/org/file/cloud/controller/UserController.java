@@ -1,7 +1,7 @@
 package org.file.cloud.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.controller.swagger.UserSwagger;
+import org.file.cloud.doc.UserSwagger;
 import org.file.cloud.dto.UsernameDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

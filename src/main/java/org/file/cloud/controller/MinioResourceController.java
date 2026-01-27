@@ -3,7 +3,7 @@ package org.file.cloud.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.builder.ResponseDtoBuilder;
-import org.file.cloud.controller.swagger.ResourceSwagger;
+import org.file.cloud.doc.ResourceSwagger;
 import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;

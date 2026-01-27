@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.controller.swagger.AuthSwagger;
+import org.file.cloud.doc.AuthSwagger;
 import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.dto.UsernameDto;
 import org.file.cloud.service.UserService;

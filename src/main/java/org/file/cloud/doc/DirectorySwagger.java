@@ -1,4 +1,4 @@
-package org.file.cloud.controller.swagger;
+package org.file.cloud.doc;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,7 +28,7 @@ public interface DirectorySwagger {
     )
     @Parameter(
             name = "path",
-            description = "Directory path",
+            description = "Path to the target folder",
             required = true,
             allowEmptyValue = true,
             in = ParameterIn.QUERY
@@ -36,7 +36,7 @@ public interface DirectorySwagger {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Folder contents received successfully",
+                    description = "Folder contents retrieved successfully",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             array = @ArraySchema(
@@ -66,7 +66,7 @@ public interface DirectorySwagger {
     }
     )
 
-    public ResponseEntity<List<ResponseResourceDto>> showFolderContent(
+    public ResponseEntity<List<ResponseResourceDto>> getFolderContents(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam String path);
 

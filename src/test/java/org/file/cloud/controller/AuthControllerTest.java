@@ -17,6 +17,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
@@ -60,6 +62,17 @@ class AuthControllerTest {
         assertThatExceptionOfType(DuplicateUserException.class).isThrownBy(() -> userService.signUp(requestUserDto));
     }
 
+    @Test
+    void passwordShouldBeEncoded() {
+        RequestUserDto userDto = RequestUserDto.builder()
+                .username("Pol")
+                .password("Pol")
+                .build();
+        userService.signUp(userDto);
+        Optional<User> userOptional = userRepository.findByUsername(userDto.getUsername());
+        assertThat(userOptional.isPresent());
+        assertThat(userOptional.get().getPassword()).isNotEqualTo(userDto.getPassword());
+    }
 
 }
 

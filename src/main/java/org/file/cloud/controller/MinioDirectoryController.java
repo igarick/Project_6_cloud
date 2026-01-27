@@ -2,7 +2,7 @@ package org.file.cloud.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.file.cloud.controller.swagger.DirectorySwagger;
+import org.file.cloud.doc.DirectorySwagger;
 import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
@@ -27,7 +27,7 @@ public class MinioDirectoryController implements DirectorySwagger {
     private final StorageResourceValidator storageResourceValidator;
 
     @GetMapping
-    public ResponseEntity<List<ResponseResourceDto>> showFolderContent(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
+    public ResponseEntity<List<ResponseResourceDto>> getFolderContents(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
         if (!PathValidator.isValidPathOrRoot(path)) {
             log.warn("Invalid or empty path: path = {}", path);
             throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
@@ -43,7 +43,7 @@ public class MinioDirectoryController implements DirectorySwagger {
     }
 
     @PostMapping
-    public ResponseEntity<ResponseResourceDto> createFolder(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) throws Exception {
+    public ResponseEntity<ResponseResourceDto> createFolder(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
         if (!path.endsWith("/") || !PathValidator.isValidPath(path)) {
             log.warn("Invalid or empty path to the new folder: path = {}", path);
             throw new InvalidOrEmptyPathException(ErrorInfo.NEW_FOLDER_PATH_ERROR);

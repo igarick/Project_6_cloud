@@ -1,4 +1,4 @@
-package org.file.cloud.controller.swagger;
+package org.file.cloud.doc;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
