@@ -8,6 +8,7 @@ import org.file.cloud.builder.ResponseDtoBuilder;
 import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
+import org.file.cloud.repository.UserRepository;
 import org.file.cloud.service.minio.MinioStorageService;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,7 @@ public class MinioDirectoryService {
     private final ResponseDtoBuilder responseDtoBuilder;
     private final UserRootFolderManager userRootFolderManager;
     private final UserService userService;
+    private final UserRepository userRepository;
 
     public ResponseResourceDto createFolder(String username, String resourcePath) {
         String fullPath = pathService.getFullPath(username, resourcePath);
@@ -33,7 +35,8 @@ public class MinioDirectoryService {
     }
 
     public List<ResponseResourceDto> showFolderContent(String username, String path) {
-        Long userId = userService.getUserId(username);
+//        Long userId = userService.getUserId(username);
+        Long userId = userRepository.findIdByUsername(username);
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         String fullPath = userRootFolder + path;
         log.info("fullPath = " + fullPath);

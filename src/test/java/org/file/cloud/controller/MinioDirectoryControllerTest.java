@@ -30,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MinioDirectoryControllerTest {
     private static final String BUCKET = "test-bucket";
     private final String TEST_FOLDER = "testFolder";
-//    private static final String USERNAME = minIOContainer.getUserName();
 
     @Autowired
     MinioDirectoryService minioDirectoryService;
@@ -43,13 +42,13 @@ class MinioDirectoryControllerTest {
 
     private String minioUserName;
     private String minioUserPassword;
+    private String s3URL;
 
     @Container
     @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:18.1");
 
     @Container
-//    @ServiceConnection
     static MinIOContainer minIOContainer = new MinIOContainer("minio/minio:RELEASE.2025-07-23T15-54-02Z");
 
     @BeforeEach
@@ -58,27 +57,30 @@ class MinioDirectoryControllerTest {
         log.info("userName = {}", minioUserName);
         minioUserPassword = minIOContainer.getPassword();
         log.info("userPassword = {}", minioUserPassword);
-        String host = minIOContainer.getHost();
-        log.info("host = {}", host);
-        String s3URL = minIOContainer.getS3URL();
+        s3URL = minIOContainer.getS3URL();
         log.info("s3URL = {}", s3URL);
+
         MinioClient minioClient = createClient();
         createBucket(minioClient);
+
         RequestUserDto requestUserDto = RequestUserDto.builder()
                 .username(minioUserName)
                 .password(minioUserPassword)
                 .build();
 
-        userService.signUp(requestUserDto);
+        createUser(requestUserDto);
+        userService.createUserRootFolder(requestUserDto);
+
+
     }
 
     @Test
     void check() {
-        assertThat(minioUserName.equals("popopo"));
-        assertThat(minioUserPassword.equals("popopo"));
-        assertThat(minIOContainer.getHost().equals("asdasd"));
+        assertThat(minioUserName).isEqualTo("minioadmin");
+        log.info("in test: userName = {}", minioUserName);
+        assertThat(minioUserPassword).isEqualTo("minioadmin");
+        log.info("in test:userPassword = {}", minioUserPassword);
     }
-
 
     private MinioClient createClient() {
         return MinioClient.builder()
@@ -94,11 +96,15 @@ class MinioDirectoryControllerTest {
                         .build());
     }
 
-    @Test
-    void shouldPersistUser() {
-        Optional<User> userOptional = userRepository.findByUsername(minioUserName);
-        assertThat(userOptional.isPresent());
-        assertThat(userOptional.get().getUsername().equals(minioUserName));
+    void createUser(RequestUserDto requestUserDto) {
+        userService.signUp(requestUserDto);
     }
+
+    @Test
+    void shouldCreateFolder() {
+        String emptyFolder = "";
+
+    }
+
 
 }

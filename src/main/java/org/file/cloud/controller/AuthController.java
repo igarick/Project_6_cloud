@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.doc.AuthSwagger;
 import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.dto.UsernameDto;
+import org.file.cloud.service.UserRootFolderManager;
 import org.file.cloud.service.UserService;
 import org.file.cloud.validator.RequestValidator;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,8 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping("/api/auth")
 public class AuthController implements AuthSwagger {
     private final UserService userService;
+    private final UserRootFolderManager userRootFolderManager;
+
 
     @PostMapping("/sign-up")
     public ResponseEntity<UsernameDto> signUpUser(
@@ -32,6 +35,7 @@ public class AuthController implements AuthSwagger {
             HttpServletResponse response) {
         RequestValidator.validateUserParams(requestUserDto);
         userService.signUp(requestUserDto);
+        userService.createUserRootFolder(requestUserDto);
         UsernameDto usernameDto = userService.signIn(requestUserDto, request, response);
         return ResponseEntity.status(CREATED).body(usernameDto);
     }

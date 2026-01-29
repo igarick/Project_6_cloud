@@ -2,6 +2,7 @@ package org.file.cloud.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -9,10 +10,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PathService {
     private final UserRootFolderManager userRootFolderManager;
-    private final UserService userService;
+    private final UserRepository userRepository;
+//    private final UserService userService;
 
     public String getFullPath(String username, String resourcePath) {
-        Long userId = userService.getUserId(username);
+//        Long userId = userService.getUserId(username);
+        Long userId = userRepository.findIdByUsername(username);
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         return userRootFolder + resourcePath;
     }

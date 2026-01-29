@@ -43,9 +43,6 @@ public class UserService {
             log.warn("Failed to save user - {}. User already exists", username);
             throw new DuplicateUserException(ErrorInfo.USERNAME_DUPLICATE_ERROR, e);
         }
-        Long id = user.getId();
-        log.info("User id = {}", id);
-        userRootFolderManager.createUserRootFolder(user.getId());
         log.info("Saved user = {}", username);
     }
 
@@ -61,11 +58,11 @@ public class UserService {
         securityContextHolderStrategy.clearContext();
     }
 
-    public Long getUserId(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> {
-            log.warn("User - {} not found", username);
-            return new DaoException(ErrorInfo.USER_NOT_FOUND);
-        });
-        return user.getId();
+    public void createUserRootFolder(RequestUserDto requestUserDto) {
+        log.info("Creating ROOT folder");
+        Long userId = userRepository.findIdByUsername(requestUserDto.getUsername());
+        log.info("User id = {}", userId);
+        userRootFolderManager.createUserRootFolder(userId);
     }
+
 }

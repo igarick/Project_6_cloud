@@ -11,6 +11,7 @@ import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
 import org.file.cloud.exception.path.InvalidOrEmptyPathException;
+import org.file.cloud.repository.UserRepository;
 import org.file.cloud.service.minio.MinioStorageService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,10 +37,12 @@ public class MinioResourceService {
     private final ResponseDtoBuilder responseDtoBuilder;
     private final UserRootFolderManager userRootFolderManager;
     private final UserService userService;
+    private final UserRepository userRepository;
 
     public List<ResponseResourceDto> uploadResource(String username, String path, List<MultipartFile> files) {
         log.info("Start uploading resource in directory: path = {}", path);
-        Long userId = userService.getUserId(username);
+//        Long userId = userService.getUserId(username);
+        Long userId = userRepository.findIdByUsername(username);
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         String fullPathDirectoryForDownload = userRootFolder + path;
         if (!minioStorageService.isFolderExists(fullPathDirectoryForDownload)) {
@@ -75,7 +78,8 @@ public class MinioResourceService {
     }
 
     public List<ResponseResourceDto> searchResource(String username, String query) {
-        Long userId = userService.getUserId(username);
+//        Long userId = userService.getUserId(username);
+        Long userId = userRepository.findIdByUsername(username);
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         log.info("userRootFolder = " + userRootFolder);
         Iterable<Result<Item>> objects = minioStorageService.getObjects(userRootFolder);
