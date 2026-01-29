@@ -11,16 +11,6 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(MinioProperties.class)
 public class MinioConfiguration {
 
-//    @Value("${spring.minio.endpoint}")
-//    private String endpoint;
-//
-//    @Value("${spring.minio.access-key}")
-//    private String accessKey;
-//
-//    @Value("${spring.minio.secret-key}")
-//    private String secretKey;
-
-
     @Bean
     public MinioClient minioClient(MinioProperties properties) {
         return MinioClient.builder()

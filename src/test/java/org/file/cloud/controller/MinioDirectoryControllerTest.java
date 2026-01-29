@@ -4,22 +4,28 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.RequestUserDto;
-import org.file.cloud.model.User;
+import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.repository.UserRepository;
-import org.file.cloud.service.MinioDirectoryService;
+import org.file.cloud.service.MinioResourceService;
+import org.file.cloud.service.UserRootFolderManager;
 import org.file.cloud.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,7 +38,7 @@ class MinioDirectoryControllerTest {
     private final String TEST_FOLDER = "testFolder";
 
     @Autowired
-    MinioDirectoryService minioDirectoryService;
+    MinioResourceService minioResourceService;
 
     @Autowired
     UserService userService;
@@ -40,9 +46,18 @@ class MinioDirectoryControllerTest {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    UserRootFolderManager userRootFolderManager;
+
     private String minioUserName;
     private String minioUserPassword;
     private String s3URL;
+
+    private List<MultipartFile> files;
+
+    private static final String TEST_NAME = "TestName";
+    private static final String TEST_PASSWORD = "TestPassword";
+    private static Long userId;
 
     @Container
     @ServiceConnection
@@ -64,14 +79,14 @@ class MinioDirectoryControllerTest {
         createBucket(minioClient);
 
         RequestUserDto requestUserDto = RequestUserDto.builder()
-                .username(minioUserName)
-                .password(minioUserPassword)
+                .username(TEST_NAME)
+                .password(TEST_PASSWORD)
                 .build();
 
-        createUser(requestUserDto);
+        userId = createUserAndGetId(requestUserDto);
         userService.createUserRootFolder(requestUserDto);
 
-
+        files = createFile();
     }
 
     @Test
@@ -96,15 +111,56 @@ class MinioDirectoryControllerTest {
                         .build());
     }
 
-    void createUser(RequestUserDto requestUserDto) {
+    Long createUserAndGetId(RequestUserDto requestUserDto) {
         userService.signUp(requestUserDto);
+        return userRepository.findIdByUsername(requestUserDto.getUsername());
+    }
+
+    List<MultipartFile> createFile() {
+        List<MultipartFile> files = new ArrayList<>();
+        files.add(
+                new MockMultipartFile(
+                        "file",
+                        "hello.txt",
+                        MediaType.TEXT_PLAIN_VALUE,
+                        "Hello my friend!".getBytes()
+                )
+        );
+        return files;
     }
 
     @Test
-    void shouldCreateFolder() {
-        String emptyFolder = "";
+    void shouldCreateOneFile() {
+        String path = "";
+        List<ResponseResourceDto> responseResourceDtos = minioResourceService.uploadResource(TEST_NAME, path, files);
+        StreamingResponseBody fileStream = minioResourceService.getFileStream(TEST_NAME, "hello.txt");
 
+
+        String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
+        String fullFilePath = BUCKET + "/" + userRootFolder + "/" + "hello.txt";
+
+
+        assertThat(fileStream).isNotNull();
+        assertThat(responseResourceDtos.size()).isEqualTo(1);
     }
-
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

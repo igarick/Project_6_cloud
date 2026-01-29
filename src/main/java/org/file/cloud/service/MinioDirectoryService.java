@@ -23,7 +23,7 @@ public class MinioDirectoryService {
     private final PathService pathService;
     private final ResponseDtoBuilder responseDtoBuilder;
     private final UserRootFolderManager userRootFolderManager;
-    private final UserService userService;
+//    private final UserService userService;
     private final UserRepository userRepository;
 
     public ResponseResourceDto createFolder(String username, String resourcePath) {

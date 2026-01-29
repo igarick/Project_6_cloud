@@ -9,4 +9,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record MinioProperties(
         String endpoint,
         String accessKey,
-        String secretKey) {}
+        String secretKey,
+        String bucket) {}

@@ -7,6 +7,7 @@ import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.configuration.MinioProperties;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MinioStorageService {
     private final MinioClient minioClient;
+    private final MinioProperties minioProperties;
 
-    private static final String MAIN_BUCKET = "user-files";
+//    private static final String MAIN_BUCKET = "user-files";
+    private final String MAIN_BUCKET = minioProperties.bucket();
+
 
     public void uploadFile(InputStream inputStream, String resourceFullPath, String contentType, Long size) {
         try {
