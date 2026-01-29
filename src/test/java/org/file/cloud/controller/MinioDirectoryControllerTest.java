@@ -2,13 +2,18 @@ package org.file.cloud.controller;
 
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
+import io.minio.Result;
+import io.minio.errors.*;
+import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
+import org.file.cloud.configuration.MinioProperties;
 import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.repository.UserRepository;
 import org.file.cloud.service.MinioResourceService;
 import org.file.cloud.service.UserRootFolderManager;
 import org.file.cloud.service.UserService;
+import org.file.cloud.service.minio.MinioStorageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +22,8 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.testcontainers.containers.MinIOContainer;
@@ -24,6 +31,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,8 +44,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @Testcontainers
 class MinioDirectoryControllerTest {
-    private static final String BUCKET = "test-bucket";
+    //    private static final String BUCKET = "test-bucket";
     private final String TEST_FOLDER = "testFolder";
+
+    @Autowired
+    MinioClient minioClient;
 
     @Autowired
     MinioResourceService minioResourceService;
@@ -48,6 +61,12 @@ class MinioDirectoryControllerTest {
 
     @Autowired
     UserRootFolderManager userRootFolderManager;
+
+    @Autowired
+    MinioProperties minioProperties;
+
+    @Autowired
+    MinioStorageService minioStorageService;
 
     private String minioUserName;
     private String minioUserPassword;
@@ -66,6 +85,13 @@ class MinioDirectoryControllerTest {
     @Container
     static MinIOContainer minIOContainer = new MinIOContainer("minio/minio:RELEASE.2025-07-23T15-54-02Z");
 
+    @DynamicPropertySource
+    static void overrideMinioProperties(DynamicPropertyRegistry registry) {
+        registry.add("minio.endpoint", minIOContainer::getS3URL);
+        registry.add("minio.access-key", minIOContainer::getUserName);
+        registry.add("minio.secret-key", minIOContainer::getPassword);
+    }
+
     @BeforeEach
     void setUp() throws Exception {
         minioUserName = minIOContainer.getUserName();
@@ -75,7 +101,7 @@ class MinioDirectoryControllerTest {
         s3URL = minIOContainer.getS3URL();
         log.info("s3URL = {}", s3URL);
 
-        MinioClient minioClient = createClient();
+//        MinioClient minioClient = createClient();
         createBucket(minioClient);
 
         RequestUserDto requestUserDto = RequestUserDto.builder()
@@ -107,8 +133,9 @@ class MinioDirectoryControllerTest {
     void createBucket(MinioClient minioClient) throws Exception {
         minioClient.makeBucket(
                 MakeBucketArgs.builder()
-                        .bucket(BUCKET)
+                        .bucket(minioProperties.bucket())
                         .build());
+        log.info("BUCKET = {}", minioProperties.bucket());
     }
 
     Long createUserAndGetId(RequestUserDto requestUserDto) {
@@ -137,7 +164,28 @@ class MinioDirectoryControllerTest {
 
 
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
-        String fullFilePath = BUCKET + "/" + userRootFolder + "/" + "hello.txt";
+        String fullFilePath =  userRootFolder + "hello.txt";
+        log.info("fullFilePath: {}", fullFilePath);
+
+
+        List<String> paths = new ArrayList<>();
+        Iterable<Result<Item>> objects = minioStorageService.getObjects(fullFilePath);
+
+        for (Result<Item> object : objects) {
+            String objectName = null;
+            try {
+                objectName = object.get().objectName();
+                paths.add(objectName);
+                log.info("objectName: {}", objectName);
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        log.info("paths size: {}", paths.size());
+
+        assertThat(paths.size()).isEqualTo(1);
+        assertThat(paths.get(0)).isEqualTo(fullFilePath);
 
 
         assertThat(fileStream).isNotNull();

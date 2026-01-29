@@ -23,14 +23,15 @@ public class MinioStorageService {
     private final MinioProperties minioProperties;
 
 //    private static final String MAIN_BUCKET = "user-files";
-    private final String MAIN_BUCKET = minioProperties.bucket();
+//    private final String MAIN_BUCKET = minioProperties.bucket();
 
 
     public void uploadFile(InputStream inputStream, String resourceFullPath, String contentType, Long size) {
         try {
             minioClient.putObject(
                     PutObjectArgs.builder()
-                            .bucket(MAIN_BUCKET)
+                            .bucket(minioProperties.bucket())
+//                            .bucket(MAIN_BUCKET)
                             .object(resourceFullPath)
                             .stream(
                                     inputStream, size, -1)
@@ -46,11 +47,11 @@ public class MinioStorageService {
         try {
             minioClient.copyObject(
                     CopyObjectArgs.builder()
-                            .bucket(MAIN_BUCKET)
+                            .bucket(minioProperties.bucket())
                             .object(to)
                             .source(
                                     CopySource.builder()
-                                            .bucket(MAIN_BUCKET)
+                                            .bucket(minioProperties.bucket())
                                             .object(from)
                                             .build())
                             .build());
@@ -64,7 +65,7 @@ public class MinioStorageService {
         try {
             return minioClient.getObjectAttributes(
                     GetObjectAttributesArgs.builder()
-                            .bucket(MAIN_BUCKET)
+                            .bucket(minioProperties.bucket())
                             .object(fullPath)
                             .objectAttributes(
                                     new String[]{"ObjectSize"
@@ -79,7 +80,7 @@ public class MinioStorageService {
 
     public boolean isFolderExists(String path) {
         Iterable<Result<Item>> results = minioClient.listObjects(ListObjectsArgs.builder()
-                .bucket(MAIN_BUCKET)
+                .bucket(minioProperties.bucket())
                 .prefix(path)
                 .recursive(false)
                 .build());
@@ -90,7 +91,7 @@ public class MinioStorageService {
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
-                            .bucket(MAIN_BUCKET)
+                            .bucket(minioProperties.bucket())
                             .object(fullPath)
                             .build());
 
@@ -104,7 +105,7 @@ public class MinioStorageService {
         try {
             return minioClient.getObject(
                     GetObjectArgs.builder()
-                            .bucket(MAIN_BUCKET)
+                            .bucket(minioProperties.bucket())
                             .object(fullPath)
                             .build());
         } catch (Exception e) {
@@ -117,7 +118,7 @@ public class MinioStorageService {
         try {
             return minioClient.listObjects(
                     ListObjectsArgs.builder()
-                            .bucket(MAIN_BUCKET)
+                            .bucket(minioProperties.bucket())
                             .prefix(fullPath)
                             .recursive(recursive)
                             .build());
@@ -135,7 +136,7 @@ public class MinioStorageService {
         try {
             return minioClient.removeObjects(
                     RemoveObjectsArgs.builder()
-                            .bucket(MAIN_BUCKET)
+                            .bucket(minioProperties.bucket())
                             .objects(objects)
                             .build());
         } catch (Exception e) {
@@ -148,7 +149,7 @@ public class MinioStorageService {
         try {
             minioClient.statObject(
                     StatObjectArgs.builder()
-                            .bucket(MAIN_BUCKET)
+                            .bucket(minioProperties.bucket())
                             .object(fullPath)
                             .build());
             return true;
@@ -169,7 +170,7 @@ public class MinioStorageService {
         try {
             minioClient.putObject(
                     PutObjectArgs.builder()
-                            .bucket(MAIN_BUCKET)
+                            .bucket(minioProperties.bucket())
                             .object(path)
                             .stream(InputStream.nullInputStream(), 0, -1)
                             .build());
