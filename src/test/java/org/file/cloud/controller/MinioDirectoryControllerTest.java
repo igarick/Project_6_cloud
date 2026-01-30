@@ -2,18 +2,19 @@ package org.file.cloud.controller;
 
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import io.minio.Result;
+import io.minio.RemoveBucketArgs;
 import io.minio.errors.*;
-import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.configuration.MinioProperties;
 import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.dto.folder.ResponseResourceDto;
 import org.file.cloud.repository.UserRepository;
+import org.file.cloud.service.MinioDirectoryService;
 import org.file.cloud.service.MinioResourceService;
 import org.file.cloud.service.UserRootFolderManager;
 import org.file.cloud.service.UserService;
 import org.file.cloud.service.minio.MinioStorageService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
 @SpringBootTest
@@ -68,14 +70,17 @@ class MinioDirectoryControllerTest {
     @Autowired
     MinioStorageService minioStorageService;
 
+    @Autowired
+    MinioDirectoryService minioDirectoryService;
+
     private String minioUserName;
     private String minioUserPassword;
     private String s3URL;
 
     private List<MultipartFile> files;
 
-    private static final String TEST_NAME = "TestName";
-    private static final String TEST_PASSWORD = "TestPassword";
+    private static final String TEST_USERNAME = "TestName";
+    private static final String TEST_USERNAME_PASSWORD = "TestPassword";
     private static Long userId;
 
     @Container
@@ -101,18 +106,42 @@ class MinioDirectoryControllerTest {
         s3URL = minIOContainer.getS3URL();
         log.info("s3URL = {}", s3URL);
 
-//        MinioClient minioClient = createClient();
         createBucket(minioClient);
 
         RequestUserDto requestUserDto = RequestUserDto.builder()
-                .username(TEST_NAME)
-                .password(TEST_PASSWORD)
+                .username(TEST_USERNAME)
+                .password(TEST_USERNAME_PASSWORD)
                 .build();
 
         userId = createUserAndGetId(requestUserDto);
         userService.createUserRootFolder(requestUserDto);
 
         files = createFile();
+    }
+
+    @BeforeEach
+    void cleanupDatabase() {
+        userRepository.deleteAll();
+    }
+
+    @AfterEach
+    void removeBucket() {
+        minioStorageService.getObjects("")
+                .forEach(itemResult -> {
+                    try {
+                        minioStorageService.deleteFile(itemResult.get().objectName());
+                    } catch (Exception e) {
+                        fail("Failed to delete file", e);
+                    }
+                });
+        try {
+            minioClient.removeBucket(
+                    RemoveBucketArgs.builder()
+                            .bucket(minioProperties.bucket())
+                            .build());
+        } catch (Exception e) {
+            fail("Failed to remove test bucket", e);
+        }
     }
 
     @Test
@@ -158,38 +187,44 @@ class MinioDirectoryControllerTest {
 
     @Test
     void shouldCreateOneFile() {
-        String path = "";
-        List<ResponseResourceDto> responseResourceDtos = minioResourceService.uploadResource(TEST_NAME, path, files);
-        StreamingResponseBody fileStream = minioResourceService.getFileStream(TEST_NAME, "hello.txt");
-
+        String uploadedPath = "";
+        List<ResponseResourceDto> responseResourceDtos = minioResourceService.uploadResource(TEST_USERNAME, uploadedPath, files);
+        StreamingResponseBody fileStream = minioResourceService.getFileStream(TEST_USERNAME, "hello.txt");
 
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
-        String fullFilePath =  userRootFolder + "hello.txt";
+        String fullUploadedPath = userRootFolder + uploadedPath;
+        String fullFilePath = userRootFolder + "hello.txt";
         log.info("fullFilePath: {}", fullFilePath);
 
-
         List<String> paths = new ArrayList<>();
-        Iterable<Result<Item>> objects = minioStorageService.getObjects(fullFilePath);
+        minioStorageService.getObjects(fullUploadedPath)
+                .forEach(result -> {
+                    try {
+                        String objectName = result.get().objectName();
+                        paths.add(objectName);
+                        log.info("objectName: {}", objectName);
+                    } catch (Exception e) {
+                        fail("Failed to read object from MinIO", e);
+                    }
+                });
+        paths.removeIf(s -> s.equals(fullUploadedPath));
 
-        for (Result<Item> object : objects) {
-            String objectName = null;
-            try {
-                objectName = object.get().objectName();
-                paths.add(objectName);
-                log.info("objectName: {}", objectName);
-
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-        log.info("paths size: {}", paths.size());
-
-        assertThat(paths.size()).isEqualTo(1);
-        assertThat(paths.get(0)).isEqualTo(fullFilePath);
-
+        assertThat(paths).hasSize(1).containsExactly(fullFilePath);
 
         assertThat(fileStream).isNotNull();
         assertThat(responseResourceDtos.size()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldCreateDirectory() {
+//        String uploadedPath = "";
+        String folderName = "snow";
+        String directoryPath = folderName + "/";
+
+        ResponseResourceDto folder = minioDirectoryService.createFolder(TEST_USERNAME, directoryPath);
+        log.info("folder name from dto = {}", folder.getName());
+
+        assertThat(folderName).isEqualTo(folder.getName());
     }
 }
 
