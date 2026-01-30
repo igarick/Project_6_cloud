@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.configuration.MinioProperties;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.exception.folder.ResourceException;
+import org.file.cloud.exception.minio.ResourceStorageException;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -22,16 +23,11 @@ public class MinioStorageService {
     private final MinioClient minioClient;
     private final MinioProperties minioProperties;
 
-//    private static final String MAIN_BUCKET = "user-files";
-//    private final String MAIN_BUCKET = minioProperties.bucket();
-
-
     public void uploadFile(InputStream inputStream, String resourceFullPath, String contentType, Long size) {
         try {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(minioProperties.bucket())
-//                            .bucket(MAIN_BUCKET)
                             .object(resourceFullPath)
                             .stream(
                                     inputStream, size, -1)
@@ -39,7 +35,7 @@ public class MinioStorageService {
                             .build());
         } catch (Exception e) {
             log.error("Unexpected error while putting file: resourceFullPath = {}, error: {}", resourceFullPath, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+            throw new ResourceStorageException(ErrorInfo.UNEXPECTED_ERROR);
         }
     }
 
@@ -57,7 +53,7 @@ public class MinioStorageService {
                             .build());
         } catch (Exception e) {
             log.error("Unexpected error while coping file: pathTo = {}, error: {}", to, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+            throw new ResourceStorageException(ErrorInfo.UNEXPECTED_ERROR);
         }
     }
 
@@ -74,7 +70,7 @@ public class MinioStorageService {
                             .build());
         } catch (Exception e) {
             log.error("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+            throw new ResourceStorageException(ErrorInfo.UNEXPECTED_ERROR);
         }
     }
 
@@ -97,7 +93,7 @@ public class MinioStorageService {
 
         } catch (Exception e) {
             log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+            throw new ResourceStorageException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
     }
 
@@ -110,7 +106,7 @@ public class MinioStorageService {
                             .build());
         } catch (Exception e) {
             log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+            throw new ResourceStorageException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
     }
 
@@ -124,7 +120,7 @@ public class MinioStorageService {
                             .build());
         } catch (Exception e) {
             log.warn("Unexpected error while getting list objects: path = {}, error: {}", fullPath, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+            throw new ResourceStorageException(ErrorInfo.UNEXPECTED_ERROR);
         }
     }
 
@@ -141,7 +137,7 @@ public class MinioStorageService {
                             .build());
         } catch (Exception e) {
             log.warn("Unexpected error while deleting: error - {}", e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+            throw new ResourceStorageException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
     }
 
@@ -159,10 +155,10 @@ public class MinioStorageService {
                 return false;
             }
             log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+            throw new ResourceStorageException(ErrorInfo.UNEXPECTED_ERROR);
         } catch (Exception e) {
             log.warn("Unexpected error for - {}. Error: {}", fullPath, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR);
+            throw new ResourceStorageException(ErrorInfo.UNEXPECTED_ERROR);
         }
     }
 
@@ -176,7 +172,7 @@ public class MinioStorageService {
                             .build());
         } catch (Exception e) {
             log.error("Unexpected error while creating folder - {}. Error: {}", path, e.getMessage(), e);
-            throw new ResourceException(ErrorInfo.UNEXPECTED_ERROR, e);
+            throw new ResourceStorageException(ErrorInfo.UNEXPECTED_ERROR, e);
         }
     }
 }
