@@ -1,77 +1,55 @@
 package org.file.cloud.controller;
 
 import org.file.cloud.dto.RequestUserDto;
-import org.file.cloud.dto.UserSignUpDto;
 import org.file.cloud.exception.DuplicateUserException;
 import org.file.cloud.model.User;
-import org.file.cloud.repository.UserRepository;
-import org.file.cloud.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-@SpringBootTest
-@ActiveProfiles("test")
-@Testcontainers
-class AuthControllerTest {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:18.1");
+class AuthControllerTest extends BaseIntegrationTest {
 
     @Autowired
-    UserService userService;
-
-    @Autowired
-    UserRepository userRepository;
-
-    @BeforeEach
-    void cleanupDatabase() {
-        userRepository.deleteAll();
-    }
+    PasswordEncoder passwordEncoder;
 
     @Test
     void shouldPersistUser_whenCreatingNewUser() {
         RequestUserDto requestUserDto = RequestUserDto.builder()
-                .username("Robert")
-                .password("Robert")
+                .username(USERNAME_1)
+                .password(PASSWORD_1)
                 .build();
         userService.signUp(requestUserDto);
-        User user = userRepository.findByUsername("Robert").orElseThrow();
-        assertThat(user.getUsername()).isEqualTo("Robert");
+        User user = userRepository.findByUsername(USERNAME_1).orElseThrow();
+        assertThat(user.getUsername()).isEqualTo(USERNAME_1);
     }
 
     @Test
     void shouldThrowDuplicateException_whenUserAlreadyExists() {
         RequestUserDto requestUserDto = RequestUserDto.builder()
-                .username("Tom")
-                .password("Tom")
+                .username(USERNAME_1)
+                .password(PASSWORD_1)
                 .build();
         userService.signUp(requestUserDto);
+
         assertThatExceptionOfType(DuplicateUserException.class).isThrownBy(() -> userService.signUp(requestUserDto));
     }
 
     @Test
     void passwordShouldBeEncoded() {
         RequestUserDto userDto = RequestUserDto.builder()
-                .username("Pol")
-                .password("Pol")
+                .username(USERNAME_1)
+                .password(PASSWORD_1)
                 .build();
         userService.signUp(userDto);
         Optional<User> userOptional = userRepository.findByUsername(userDto.getUsername());
+
         assertThat(userOptional.isPresent());
-        assertThat(userOptional.get().getPassword()).isNotEqualTo(userDto.getPassword());
+        assertThat(passwordEncoder.matches(userDto.getPassword(), userOptional.get().getPassword()));
     }
 
 }
