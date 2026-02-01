@@ -210,14 +210,14 @@ public class MinioResourceService {
         return responseDtoBuilder.buildResourceDto(username, to);
     }
 
-    public void moveFile(String fullPathFrom, String fullPathTo) {
+    private void moveFile(String fullPathFrom, String fullPathTo) {
         minioStorageService.moveFile(fullPathFrom, fullPathTo);
         log.info("Copied/Moved file: from = {}, to = {}", fullPathFrom, fullPathTo);
         minioStorageService.deleteFile(fullPathFrom);
         log.info("Deleted file: path = {}", fullPathFrom);
     }
 
-    public void moveFolder(String fullPathFrom, String fullPathTo) {
+    private void moveFolder(String fullPathFrom, String fullPathTo) {
         Iterable<Result<Item>> results = minioStorageService.getObjects(fullPathFrom);
 
         try {
