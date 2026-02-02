@@ -17,7 +17,7 @@ public class UserRootFolderManager {
         String userRootFolder = String.format(USER_ROOT_FOLDER_TEMPLATE, id);
 
         minioStorageService.createFolder(userRootFolder);
-        log.info("Root folder is created: user id = {}, path = {}", id, userRootFolder);
+        log.info("Created root folder: user id = {}, path = {}", id, userRootFolder);
     }
 
     public String getUserRootFolder(Long userId) {

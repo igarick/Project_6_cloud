@@ -59,9 +59,9 @@ public class UserService {
     }
 
     public void createUserRootFolder(RequestUserDto requestUserDto) {
-        log.info("Start creating ROOT folder");
+        log.debug("Start creating ROOT folder");
         Long userId = userRepository.findIdByUsername(requestUserDto.getUsername());
-        log.info("User id = {}", userId);
+        log.debug("User id = {}", userId);
         userRootFolderManager.createUserRootFolder(userId);
     }
 

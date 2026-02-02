@@ -271,25 +271,15 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldMoveFolderToAnotherFolder() {
-        // create new folder
+        // create new folders
         String folderPathFrom = "sun/";
         String folderPathTo = "gold/sold/";
         String expectedCreatedFolderNameTo = "sold/";
-
-//        ResponseResourceDto folderFrom = minioDirectoryService.createFolder(USERNAME_1, folderPathFrom);
-//        Long id = userRepository.findIdByUsername(USERNAME_1);
-//        String userRootFolder = userRootFolderManager.getUserRootFolder(id);
-//        String fullPathFolderFrom = userRootFolder + folderPathFrom;
-//        log.info("Created folderFrom = {}", fullPathFolderFrom);
-//        assertThat(minioStorageService.isFolderExists(fullPathFolderFrom)).isTrue();
-//        assertThat(folderFrom.getName() + "/").isEqualTo(folderPathFrom);
-
 
         ResponseResourceDto folderTo = minioDirectoryService.createFolder(USERNAME_1, folderPathTo);
         Long id = userRepository.findIdByUsername(USERNAME_1);
         String userRootFolder = userRootFolderManager.getUserRootFolder(id);
         String fullPathFolderTo = userRootFolder + folderPathTo;
-        log.info("Created folder = {}", fullPathFolderTo);
         assertThat(minioStorageService.isFolderExists(fullPathFolderTo)).isTrue();
         assertThat(folderTo.getName() + "/").isEqualTo(expectedCreatedFolderNameTo);
 
@@ -316,7 +306,6 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
         String newFolder = folderPathTo + folderPathFrom;
         ResponseResourceDto movedResourceDto = minioResourceService.moveResource(USERNAME_1, folderPathFrom, newFolder);
         assertThat(movedResourceDto.getName()).isEqualTo(folderPathFrom);
-        log.info("--------------1-----------------------");
 
         String fullNewFolderPath = userRootFolder + newFolder;
         List<String> result = new ArrayList<>();
@@ -340,9 +329,9 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
         log.info("--------------4-----------------------");
 
 
-        String newFullFirstFilePath = userRootFolder + folderPathTo + FIRST_FILE_NAME;
-        String newFullSecondFilePath = userRootFolder + folderPathTo + SECOND_FILE_NAME;
-        String newFullThirdFilePath = userRootFolder + folderPathTo + THIRD_FILE_NAME;
+        String newFullFirstFilePath = userRootFolder + folderPathTo + folderPathFrom + FIRST_FILE_NAME;
+        String newFullSecondFilePath = userRootFolder + folderPathTo + folderPathFrom + SECOND_FILE_NAME;
+        String newFullThirdFilePath = userRootFolder + folderPathTo + folderPathFrom + THIRD_FILE_NAME;
         log.info("Folder contents: {}, {}, {}", newFullFirstFilePath, newFullSecondFilePath, newFullThirdFilePath);
         assertThat(minioStorageService.isFileExists(newFullFirstFilePath)).isTrue();
         assertThat(minioStorageService.isFileExists(newFullSecondFilePath)).isTrue();
