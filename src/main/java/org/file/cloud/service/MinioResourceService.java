@@ -46,7 +46,7 @@ public class MinioResourceService {
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         String fullPathDirectoryForDownload = userRootFolder + path;
         if (!minioStorageService.isFolderExists(fullPathDirectoryForDownload)) {
-            log.error("Folder does not exists: path = {}", fullPathDirectoryForDownload);
+            log.error("Folder does not exists: user = {}, path = {}", userId, fullPathDirectoryForDownload);
             throw new InvalidOrEmptyPathException(ErrorInfo.REQUEST_BODY_ERROR);
         }
         List<ResponseResourceDto> result = new ArrayList<>();
@@ -57,7 +57,7 @@ public class MinioResourceService {
                 String fullResourcePath = fullPathDirectoryForDownload + originalFilename;
 
                 if (minioStorageService.isFileExists(fullResourcePath)) {
-                    log.error("File already exists: path = {}", originalFilename);
+                    log.error("File already exists: user = {}, path = {}", userId, originalFilename);
                     throw new ResourceException(ErrorInfo.FILE_ALREADY_EXISTS);
                 }
                 InputStream inputStream = file.getInputStream();
@@ -65,7 +65,7 @@ public class MinioResourceService {
                 Long size = file.getSize();
 
                 minioStorageService.uploadFile(inputStream, fullResourcePath, contentType, size);
-                log.info("Uploaded resource: path = {}, size = {}", originalFilename, size);
+                log.info("Uploaded resource: user = {}, path = {}, size = {}", userId, originalFilename, size);
 
                 String fullPath = path + originalFilename;
                 result.add(responseDtoBuilder.buildResourceDto(username, fullPath));

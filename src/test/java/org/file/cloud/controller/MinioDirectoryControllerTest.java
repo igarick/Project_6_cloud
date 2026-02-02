@@ -4,6 +4,7 @@ import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.RemoveBucketArgs;
+import io.minio.errors.*;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.configuration.MinioProperties;
 import org.file.cloud.dto.RequestUserDto;
@@ -24,6 +25,9 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,8 +68,10 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
 
     private static final String FIRST_FILE_NAME = "first.txt";
     private static final String SECOND_FILE_NAME = "second.txt";
+    private static final String THIRD_FILE_NAME = "third.pdf";
 
-    private List<MultipartFile> files;
+    private List<MultipartFile> testFile;
+    protected List<MultipartFile> testFolder;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -78,7 +84,8 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
 
         userService.signUp(requestUserDto);
         userService.createUserRootFolder(requestUserDto);
-        files = createFirstFile();
+        testFile = createFirstFile();
+        testFolder = createFolder();
     }
 
     @AfterEach
@@ -92,7 +99,7 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
                     try {
                         minioStorageService.deleteFile(itemResult.get().objectName());
                     } catch (Exception e) {
-                        fail("Failed to delete file", e);
+                        fail("Failed to delete file in test bucket", e);
                     }
                 });
 
@@ -125,7 +132,7 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
         List<MultipartFile> files = new ArrayList<>();
         files.add(
                 new MockMultipartFile(
-                        "file",
+                        "files",
                         FIRST_FILE_NAME,
                         MediaType.TEXT_PLAIN_VALUE,
                         "Hello my friend!".getBytes()
@@ -135,24 +142,38 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
         return files;
     }
 
-    List<MultipartFile> createSecondFile() {
+    List<MultipartFile> createFolder() {
         List<MultipartFile> files = new ArrayList<>();
         files.add(
                 new MockMultipartFile(
-                        "file",
-                        SECOND_FILE_NAME,
+                        "files",
+                        FIRST_FILE_NAME,
                         MediaType.TEXT_PLAIN_VALUE,
-                        "Second file!".getBytes()
+                        "Hello my friend!".getBytes()
+                ));
+        files.add(
+                new MockMultipartFile(
+                        "files",
+                        SECOND_FILE_NAME,
+                        MediaType.APPLICATION_PDF_VALUE,
+                        "I want pdf!".getBytes()
+                ));
+        files.add(
+                new MockMultipartFile(
+                        "files",
+                        THIRD_FILE_NAME,
+                        MediaType.APPLICATION_XML_VALUE,
+                        "Take it, xml!".getBytes()
                 )
         );
-        log.info("Created multipartFile = {}", SECOND_FILE_NAME);
+        log.info("Created folder with files: {}, {}, {}", FIRST_FILE_NAME, SECOND_FILE_NAME, THIRD_FILE_NAME);
         return files;
     }
 
     @Test
     void shouldCreateOneFileInUserRootFolder() {
         String uploadPath = "";
-        List<ResponseResourceDto> responseResourceDtos = minioResourceService.uploadResource(USERNAME_1, uploadPath, files);
+        List<ResponseResourceDto> responseResourceDtos = minioResourceService.uploadResource(USERNAME_1, uploadPath, testFile);
         StreamingResponseBody fileStream = minioResourceService.getFileStream(USERNAME_1, FIRST_FILE_NAME);
 
         Long userId = userRepository.findIdByUsername(USERNAME_1);
@@ -192,23 +213,25 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
     @Test
     void shouldDenyAccessToOtherUsersResources() {
         String uploadPath = "";
-        String resourcePath = uploadPath + SECOND_FILE_NAME;
+        String resourcePath = uploadPath + FIRST_FILE_NAME;
         RequestUserDto requestUserDto = RequestUserDto.builder()
                 .username(USERNAME_2)
                 .password(PASSWORD_2)
                 .build();
 
+        userService.signUp(requestUserDto);
         Long userId = userRepository.findIdByUsername(requestUserDto.getUsername());
         userService.createUserRootFolder(requestUserDto);
 
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         String fullUploadedPath = userRootFolder + uploadPath;
 
-        List<ResponseResourceDto> responseResourceDtos = minioResourceService.uploadResource(requestUserDto.getUsername(), uploadPath, createSecondFile());
+        List<ResponseResourceDto> responseResourceDtos = minioResourceService.uploadResource(requestUserDto.getUsername(), uploadPath, createFirstFile());
         responseResourceDtos.removeIf(dto -> dto.getName().equals(fullUploadedPath));
 
         assertThat(responseResourceDtos.size()).isEqualTo(1);
-        assertThat(responseResourceDtos.get(0).getName()).isEqualTo(SECOND_FILE_NAME);
+        assertThat(responseResourceDtos.get(0).getName()).isEqualTo(FIRST_FILE_NAME);
+        assertThat(responseResourceDtos.get(0).getPath()).isEqualTo(uploadPath);
         assertThatExceptionOfType(ResourceException.class).isThrownBy(() -> storageResourceValidator.ensureResourceExists(USERNAME_1, resourcePath));
     }
 
@@ -216,26 +239,27 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
     void shouldMoveFileFromUserRootFolderToAnotherFolder() {
         // create new folder
         String rootDirectory = "";
-        String testFolder = "gold/";
+        String newFolder = "gold/";
 
-        ResponseResourceDto folder = minioDirectoryService.createFolder(USERNAME_1, testFolder);
+        ResponseResourceDto folder = minioDirectoryService.createFolder(USERNAME_1, newFolder);
         Long id = userRepository.findIdByUsername(USERNAME_1);
         String userRootFolder = userRootFolderManager.getUserRootFolder(id);
-        String fullFolderPath = userRootFolder + testFolder;
+        String fullFolderPath = userRootFolder + newFolder;
         log.info("Created folder = {}", fullFolderPath);
         assertThat(minioStorageService.isFolderExists(fullFolderPath)).isTrue();
+        assertThat(folder.getName() + "/").isEqualTo(newFolder);
 
         // upload file to user root folder
-        List<ResponseResourceDto> createdResourceDtos = minioResourceService.uploadResource(USERNAME_1, rootDirectory, files);
+        List<ResponseResourceDto> createdResourceDtos = minioResourceService.uploadResource(USERNAME_1, rootDirectory, testFile);
         assertThat(createdResourceDtos.size()).isEqualTo(1);
         assertThat(createdResourceDtos.get(0).getName()).isEqualTo(FIRST_FILE_NAME);
         log.info("Uploaded file: path = {}, name = {}", rootDirectory, FIRST_FILE_NAME);
 
         // move the file to the new folder
-        String resourcePathTo = testFolder + FIRST_FILE_NAME;
+        String resourcePathTo = newFolder + FIRST_FILE_NAME;
         ResponseResourceDto movedResourceDto = minioResourceService.moveResource(USERNAME_1, FIRST_FILE_NAME, resourcePathTo);
         assertThat(movedResourceDto.getName()).isEqualTo(FIRST_FILE_NAME);
-        assertThat(movedResourceDto.getPath()).isEqualTo(testFolder);
+        assertThat(movedResourceDto.getPath()).isEqualTo(newFolder);
 
 
         String fullResourcePathFrom = userRootFolder + rootDirectory + FIRST_FILE_NAME;
@@ -243,6 +267,97 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
         log.info("Full moved file path = {}", fullResourcePathTo);
         assertThat(minioStorageService.isFileExists(fullResourcePathTo)).isTrue();
         assertThat(minioStorageService.isFileExists(fullResourcePathFrom)).isFalse();
+    }
+
+    @Test
+    void shouldMoveFolderToAnotherFolder() {
+        // create new folder
+        String folderPathFrom = "sun/";
+        String folderPathTo = "gold/sold/";
+        String expectedCreatedFolderNameTo = "sold/";
+
+//        ResponseResourceDto folderFrom = minioDirectoryService.createFolder(USERNAME_1, folderPathFrom);
+//        Long id = userRepository.findIdByUsername(USERNAME_1);
+//        String userRootFolder = userRootFolderManager.getUserRootFolder(id);
+//        String fullPathFolderFrom = userRootFolder + folderPathFrom;
+//        log.info("Created folderFrom = {}", fullPathFolderFrom);
+//        assertThat(minioStorageService.isFolderExists(fullPathFolderFrom)).isTrue();
+//        assertThat(folderFrom.getName() + "/").isEqualTo(folderPathFrom);
+
+
+        ResponseResourceDto folderTo = minioDirectoryService.createFolder(USERNAME_1, folderPathTo);
+        Long id = userRepository.findIdByUsername(USERNAME_1);
+        String userRootFolder = userRootFolderManager.getUserRootFolder(id);
+        String fullPathFolderTo = userRootFolder + folderPathTo;
+        log.info("Created folder = {}", fullPathFolderTo);
+        assertThat(minioStorageService.isFolderExists(fullPathFolderTo)).isTrue();
+        assertThat(folderTo.getName() + "/").isEqualTo(expectedCreatedFolderNameTo);
+
+        ResponseResourceDto folderFrom = minioDirectoryService.createFolder(USERNAME_1, folderPathFrom);
+        String fullPathFolderFrom = userRootFolder + folderPathFrom;
+        assertThat(minioStorageService.isFolderExists(fullPathFolderFrom)).isTrue();
+        assertThat(folderFrom.getName() + "/").isEqualTo(folderPathFrom);
+        log.info("Created folder = {}", fullPathFolderFrom);
+
+        // upload testFolder to pathFolderFrom
+
+        List<ResponseResourceDto> createdResourceDtos = minioResourceService.uploadResource(USERNAME_1, folderPathFrom, testFolder);
+        assertThat(createdResourceDtos.size()).isEqualTo(3);
+
+        String fullFirstFilePath = userRootFolder + folderPathFrom + FIRST_FILE_NAME;
+        String fullSecondFilePath = userRootFolder + folderPathFrom + SECOND_FILE_NAME;
+        String fullThirdFilePath = userRootFolder + folderPathFrom + THIRD_FILE_NAME;
+        log.info("Folder contents: {}, {}, {}", fullFirstFilePath, fullSecondFilePath, fullThirdFilePath);
+        assertThat(minioStorageService.isFileExists(fullFirstFilePath)).isTrue();
+        assertThat(minioStorageService.isFileExists(fullSecondFilePath)).isTrue();
+        assertThat(minioStorageService.isFileExists(fullThirdFilePath)).isTrue();
+
+        // move to the new folder
+        String newFolder = folderPathTo + folderPathFrom;
+        ResponseResourceDto movedResourceDto = minioResourceService.moveResource(USERNAME_1, folderPathFrom, newFolder);
+        assertThat(movedResourceDto.getName()).isEqualTo(folderPathFrom);
+        log.info("--------------1-----------------------");
+
+        String fullNewFolderPath = userRootFolder + newFolder;
+        List<String> result = new ArrayList<>();
+        minioStorageService.getObjects(fullNewFolderPath, false)
+                .forEach(itemResult -> {
+                    try {
+                        String objectName = itemResult.get().objectName();
+                        log.info("Object name = {}", objectName);
+                        result.add(objectName);
+                    } catch (Exception e) {
+                        fail("Failed to read object from MinIO", e);
+                    }
+                });
+
+        log.info("--------------2-----------------------");
+        result.removeIf(s -> s.equals(newFolder));
+        log.info("--------------3-----------------------");
+
+        assertThat(result).hasSize(3);
+
+        log.info("--------------4-----------------------");
+
+
+        String newFullFirstFilePath = userRootFolder + folderPathTo + FIRST_FILE_NAME;
+        String newFullSecondFilePath = userRootFolder + folderPathTo + SECOND_FILE_NAME;
+        String newFullThirdFilePath = userRootFolder + folderPathTo + THIRD_FILE_NAME;
+        log.info("Folder contents: {}, {}, {}", newFullFirstFilePath, newFullSecondFilePath, newFullThirdFilePath);
+        assertThat(minioStorageService.isFileExists(newFullFirstFilePath)).isTrue();
+        assertThat(minioStorageService.isFileExists(newFullSecondFilePath)).isTrue();
+        assertThat(minioStorageService.isFileExists(newFullThirdFilePath)).isTrue();
+
+
+////        assertThat(movedResourceDto.getName()).isEqualTo(FIRST_FILE_NAME);
+//        assertThat(movedResourceDto.getPath()).isEqualTo(folderPathTo);
+//
+//
+//        String fullResourcePathFrom = userRootFolder + rootDirectory + FIRST_FILE_NAME;
+//        String fullResourcePathTo = fullFolderPathTo + FIRST_FILE_NAME;
+//        log.info("Full moved file path = {}", fullResourcePathTo);
+//        assertThat(minioStorageService.isFileExists(fullResourcePathTo)).isTrue();
+//        assertThat(minioStorageService.isFileExists(fullResourcePathFrom)).isFalse();
     }
 }
 

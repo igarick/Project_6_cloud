@@ -17,6 +17,7 @@ public class ResponseDtoBuilder {
     private final MinioStorageService minioStorageService;
 
     public ResponseResourceDto buildResourceDto(String username, String resourcePath) {
+        log.info("Start building ResourceDto: path = {}", resourcePath);
         String parentFolderPath = pathService.extractParentFolderPath(resourcePath);
         String fullPath = pathService.getFullPath(username, resourcePath);
 
