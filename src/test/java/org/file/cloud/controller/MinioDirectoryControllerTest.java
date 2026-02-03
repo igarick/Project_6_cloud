@@ -204,24 +204,55 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
     void shouldDenyAccessToOtherUsersResources() {
         String uploadPath = "";
         String resourcePath = uploadPath + FIRST_FILE_NAME;
-        RequestUserDto requestUserDto = RequestUserDto.builder()
+        String otherUser = USERNAME_1;
+        String otherUserRootFolder = userRootFolder;
+        String fullResourcePathForOtherUser = otherUserRootFolder + resourcePath;
+
+        assertThat(minioStorageService.isFileExists(fullResourcePathForOtherUser))
+                .as("File should NOT exist: " + fullResourcePathForOtherUser)
+                .isFalse();
+
+        RequestUserDto ownerDto = RequestUserDto.builder()
                 .username(USERNAME_2)
                 .password(PASSWORD_2)
                 .build();
 
-        userService.signUp(requestUserDto);
-        Long userId = userRepository.findIdByUsername(requestUserDto.getUsername());
-        userService.createUserRootFolder(requestUserDto);
+        userService.signUp(ownerDto);
+        Long ownerId = userRepository.findIdByUsername(ownerDto.getUsername());
+        userService.createUserRootFolder(ownerDto);
 
-        String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
-        String fullResourcePath = userRootFolder + resourcePath;
+        String ownerRootFolder = userRootFolderManager.getUserRootFolder(ownerId);
+        String fullResourcePath = ownerRootFolder + resourcePath;
 
-        uploadTestFile(requestUserDto.getUsername(), uploadPath);
+        uploadTestFile(ownerDto.getUsername(), uploadPath);
 
         assertThat(minioStorageService.isFileExists(fullResourcePath))
                 .as("File should exist: " + fullResourcePath)
                 .isTrue();
-        assertThatExceptionOfType(ResourceException.class).isThrownBy(() -> storageResourceValidator.ensureResourceExists(USERNAME_1, resourcePath));
+        assertThatExceptionOfType(ResourceException.class).isThrownBy(() -> storageResourceValidator.ensureResourceExists(otherUser, resourcePath))
+                .withMessageContaining("Resource not found");
+
+
+//        String uploadPath = "";
+//        String resourcePath = uploadPath + FIRST_FILE_NAME;
+//        RequestUserDto requestUserDto = RequestUserDto.builder()
+//                .username(USERNAME_2)
+//                .password(PASSWORD_2)
+//                .build();
+//
+//        userService.signUp(requestUserDto);
+//        Long userId = userRepository.findIdByUsername(requestUserDto.getUsername());
+//        userService.createUserRootFolder(requestUserDto);
+//
+//        String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
+//        String fullResourcePath = userRootFolder + resourcePath;
+//
+//        uploadTestFile(requestUserDto.getUsername(), uploadPath);
+//
+//        assertThat(minioStorageService.isFileExists(fullResourcePath))
+//                .as("File should exist: " + fullResourcePath)
+//                .isTrue();
+//        assertThatExceptionOfType(ResourceException.class).isThrownBy(() -> storageResourceValidator.ensureResourceExists(USERNAME_1, resourcePath));
     }
 
     @Test
