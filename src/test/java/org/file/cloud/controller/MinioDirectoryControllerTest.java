@@ -242,7 +242,7 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
         createFolder(folderPathFrom);
         createFolder(folderPathTo);
 
-        uploadFolder(folderPathFrom);
+        uploadTestFolder(folderPathFrom);
 
         assertFileExists(folderPathFrom, FIRST_FILE_NAME);
         assertFileExists(folderPathFrom, SECOND_FILE_NAME);
@@ -266,7 +266,9 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
     void shouldDeleteOneTestFile() {
         String uploadPath = "";
         String fullTestFilePath = uploadPath + FIRST_FILE_NAME;
-        List<ResponseResourceDto> responseResourceDtos = minioResourceService.uploadResource(USERNAME_1, uploadPath, testFile);
+
+        uploadTestFile(USERNAME_1, uploadPath);
+
         assertFileExists(uploadPath, FIRST_FILE_NAME);
         assertThatOnlyFilesPresentInFolder(uploadPath, EXPECTED_FILES_COUNT);
 
@@ -276,14 +278,18 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldDeleteTestFolder() {
-        String uploadPath = "";
-        String fullTestFilePath = uploadPath + FIRST_FILE_NAME;
-        List<ResponseResourceDto> responseResourceDtos = minioResourceService.uploadResource(USERNAME_1, uploadPath, testFile);
-        assertFileExists(uploadPath, FIRST_FILE_NAME);
-        assertThatOnlyFilesPresentInFolder(uploadPath, EXPECTED_FILES_COUNT);
+        String uploadPath = "fora/";
+        createFolder(uploadPath);
 
-        minioResourceService.deleteResource(USERNAME_1, fullTestFilePath);
-        assertFileNotExists(fullTestFilePath);
+        uploadTestFolder(uploadPath);
+        assertFileExists(uploadPath, FIRST_FILE_NAME);
+        assertFileExists(uploadPath, SECOND_FILE_NAME);
+        assertFileExists(uploadPath, THIRD_FILE_NAME);
+
+        minioResourceService.deleteResource(USERNAME_1 ,uploadPath);
+        assertFileNotExists(uploadPath, FIRST_FILE_NAME);
+        assertFileNotExists(uploadPath, SECOND_FILE_NAME);
+        assertFileNotExists(uploadPath, THIRD_FILE_NAME);
     }
 
     private void assertFileExists(String... parts) {
@@ -300,7 +306,7 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
                 .isFalse();
     }
 
-    private void uploadFolder(String path) {
+    private void uploadTestFolder(String path) {
         List<ResponseResourceDto> createdResourceDtos = minioResourceService.uploadResource(USERNAME_1, path, testFolder);
         assertThat(createdResourceDtos)
                 .as("Folder should be uploaded to " + path)

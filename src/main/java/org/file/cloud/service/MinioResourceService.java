@@ -107,7 +107,6 @@ public class MinioResourceService {
         String fullPath = pathService.getFullPath(username, resourcePath);
         if (resourcePath.endsWith("/")) {
             deleteFolder(fullPath);
-            log.info("Folder was deleted: path = {}", fullPath);
         } else {
             minioStorageService.deleteFile(fullPath);
             log.info("File was deleted: path = {}", fullPath);
