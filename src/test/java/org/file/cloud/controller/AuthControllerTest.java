@@ -24,7 +24,7 @@ class AuthControllerTest extends BaseIntegrationTest {
                 .password(PASSWORD_1)
                 .build();
         userService.signUp(requestUserDto);
-        User user = userRepository.findByUsername(USERNAME_1).orElseThrow();
+        User user = userRepository.findByUsernameIgnoreCase(USERNAME_1).orElseThrow();
         assertThat(user.getUsername()).isEqualTo(USERNAME_1);
     }
 
@@ -46,7 +46,7 @@ class AuthControllerTest extends BaseIntegrationTest {
                 .password(PASSWORD_1)
                 .build();
         userService.signUp(userDto);
-        Optional<User> userOptional = userRepository.findByUsername(userDto.getUsername());
+        Optional<User> userOptional = userRepository.findByUsernameIgnoreCase(userDto.getUsername());
 
         assertThat(userOptional.isPresent());
         assertThat(passwordEncoder.matches(userDto.getPassword(), userOptional.get().getPassword()));

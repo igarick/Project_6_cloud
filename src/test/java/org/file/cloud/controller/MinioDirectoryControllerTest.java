@@ -133,7 +133,7 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
     String signUpUserAndGetRootFolder(RequestUserDto requestUserDto) {
         userService.signUp(requestUserDto);
         userService.createUserRootFolder(requestUserDto);
-        Long userId = userRepository.findIdByUsername(requestUserDto.getUsername());
+        Long userId = userRepository.findIdByUsernameIgnoreCase(requestUserDto.getUsername());
         return userRootFolderManager.getUserRootFolder(userId);
     }
 
@@ -305,7 +305,7 @@ class MinioDirectoryControllerTest extends BaseIntegrationTest {
                 .build();
 
         userService.signUp(ownerFolderDto);
-        Long ownerFolderId = userRepository.findIdByUsername(ownerFolderDto.getUsername());
+        Long ownerFolderId = userRepository.findIdByUsernameIgnoreCase(ownerFolderDto.getUsername());
         userService.createUserRootFolder(ownerFolderDto);
         String ownerFolderRootFolder = userRootFolderManager.getUserRootFolder(ownerFolderId);
 

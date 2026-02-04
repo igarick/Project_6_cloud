@@ -36,7 +36,7 @@ public class MinioDirectoryService {
 
     public List<ResponseResourceDto> showFolderContent(String username, String path) {
 //        Long userId = userService.getUserId(username);
-        Long userId = userRepository.findIdByUsername(username);
+        Long userId = userRepository.findIdByUsernameIgnoreCase(username);
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         String fullPath = userRootFolder + path;
         log.info("fullPath = " + fullPath);

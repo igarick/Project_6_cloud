@@ -10,10 +10,12 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalHandlerException {
 
     @ExceptionHandler(BaseException.class)
@@ -40,11 +42,21 @@ public class GlobalHandlerException {
                 .body(new ErrorMessageDto(errorMessage));
     }
 
-    @ExceptionHandler({MaxUploadSizeExceededException.class, IllegalStateException.class})
-    public ResponseEntity<ErrorMessageDto> handleUnexpectedErrors(MaxUploadSizeExceededException e) {
-        log.error("Maximum uploaded file size must be less than 15MB", e);
+//    @ExceptionHandler(NoResourceFoundException.class)
+//    public ResponseEntity<ErrorMessageDto> handleAlreadyExistsError(NoResourceFoundException e) {
+//        log.error("Maximum uploaded file size exceeded", e);
+//        String errorMessage = ErrorInfo.RESOURCE_NOT_FOUND.getErrorMessage();
+//        int statusCode = ErrorInfo.RESOURCE_NOT_FOUND.getStatusCode();
+//        return ResponseEntity
+//                .status(statusCode)
+//                .body(new ErrorMessageDto(errorMessage));
+//    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorMessageDto> handleMaxUploadSize(MaxUploadSizeExceededException e) {
+        log.error("Maximum uploaded file size exceeded", e);
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
                 .body(new ErrorMessageDto("Maximum uploaded file size must be less than 15MB"));
     }
 

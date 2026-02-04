@@ -15,7 +15,7 @@ public class PathService {
 
     public String getFullPath(String username, String resourcePath) {
 //        Long userId = userService.getUserId(username);
-        Long userId = userRepository.findIdByUsername(username);
+        Long userId = userRepository.findIdByUsernameIgnoreCase(username);
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         return userRootFolder + resourcePath;
     }

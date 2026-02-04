@@ -6,14 +6,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.dto.UsernameDto;
-import org.file.cloud.exception.DaoException;
 import org.file.cloud.exception.DuplicateUserException;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.model.User;
 import org.file.cloud.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -60,7 +58,7 @@ public class UserService {
 
     public void createUserRootFolder(RequestUserDto requestUserDto) {
         log.debug("Start creating ROOT folder");
-        Long userId = userRepository.findIdByUsername(requestUserDto.getUsername());
+        Long userId = userRepository.findIdByUsernameIgnoreCase(requestUserDto.getUsername());
         log.debug("User id = {}", userId);
         userRootFolderManager.createUserRootFolder(userId);
     }

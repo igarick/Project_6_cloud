@@ -42,7 +42,7 @@ public class MinioResourceService {
     public List<ResponseResourceDto> uploadResource(String username, String path, List<MultipartFile> files) {
         log.info("Start uploading resource in directory: path = {}", path);
 //        Long userId = userService.getUserId(username);
-        Long userId = userRepository.findIdByUsername(username);
+        Long userId = userRepository.findIdByUsernameIgnoreCase(username);
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         String fullPathDirectoryForDownload = userRootFolder + path;
         if (!minioStorageService.isFolderExists(fullPathDirectoryForDownload)) {
@@ -79,7 +79,7 @@ public class MinioResourceService {
 
     public List<ResponseResourceDto> searchResource(String username, String query) {
 //        Long userId = userService.getUserId(username);
-        Long userId = userRepository.findIdByUsername(username);
+        Long userId = userRepository.findIdByUsernameIgnoreCase(username);
         String userRootFolder = userRootFolderManager.getUserRootFolder(userId);
         log.info("userRootFolder = " + userRootFolder);
         Iterable<Result<Item>> objects = minioStorageService.getObjects(userRootFolder);
