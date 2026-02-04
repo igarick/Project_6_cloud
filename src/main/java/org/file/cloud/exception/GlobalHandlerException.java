@@ -3,12 +3,14 @@ package org.file.cloud.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.ErrorMessageDto;
 import org.file.cloud.exception.folder.ResourceAlreadyExistsException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @Slf4j
 @ControllerAdvice
@@ -30,14 +32,6 @@ public class GlobalHandlerException {
                 .body(new ErrorMessageDto("Invalid username or password"));
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorMessageDto> handleUnexpectedErrors(Exception e) {
-        log.error("Unexpected error", e);
-        return ResponseEntity
-                .status(500)
-                .body(new ErrorMessageDto("Internal server error"));
-    }
-
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ErrorMessageDto> handleAlreadyExistsError(ResourceAlreadyExistsException e) {
         String errorMessage = String.format(e.getErrorInfo().getErrorMessage(), e.getPath());
@@ -46,4 +40,19 @@ public class GlobalHandlerException {
                 .body(new ErrorMessageDto(errorMessage));
     }
 
+    @ExceptionHandler({MaxUploadSizeExceededException.class, IllegalStateException.class})
+    public ResponseEntity<ErrorMessageDto> handleUnexpectedErrors(MaxUploadSizeExceededException e) {
+        log.error("Maximum uploaded file size must be less than 15MB", e);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorMessageDto("Maximum uploaded file size must be less than 15MB"));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorMessageDto> handleUnexpectedErrors(Exception e) {
+        log.error("Unexpected error", e);
+        return ResponseEntity
+                .status(500)
+                .body(new ErrorMessageDto("Internal server error"));
+    }
 }

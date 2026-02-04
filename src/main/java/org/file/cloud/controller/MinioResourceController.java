@@ -48,10 +48,11 @@ public class MinioResourceController implements ResourceSwagger {
 
     @GetMapping("/download")
     public ResponseEntity<StreamingResponseBody> downloadResource(@AuthenticationPrincipal UserDetails userDetails, @RequestParam String path) {
+        if (!PathValidator.isValidPath(path)) {
+            log.error("Invalid or empty path");
+            throw new InvalidOrEmptyPathException(ErrorInfo.INVALID_OR_EMPTY_PATH_ERROR);
+        }
         storageResourceValidator.ensureResourceExists(userDetails.getUsername(), path);
-
-        //to do
-        // валидация пути на NULL и ""
 
         Path fileName = Paths.get(path).getFileName();
         String name = fileName.toString();

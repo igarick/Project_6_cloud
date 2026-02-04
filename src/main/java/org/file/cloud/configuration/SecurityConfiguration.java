@@ -34,17 +34,11 @@ public class SecurityConfiguration {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-//                                .requestMatchers("/", "/static/**", "/index.html", "/config.js", "/assets/**", "/*.ico", "/login", "/registration", "/files/**").permitAll()
-//                                .requestMatchers("/", "/index.html", "/config.js", "/favicon.ico", "/assets/**").permitAll()
                                 .requestMatchers("/", "/index.html", "/static/**", "/favicon.ico", "/manifest.json", "/assets/**", "/config.js", "/login", "/registration", "/files/**").permitAll()
-//                                .requestMatchers("/api/auth/**").permitAll()
-//                                .requestMatchers("/", "/index.html", "/config.js", "/assets/**", "/login", "/registration", "/files/**").permitAll()
                                 .requestMatchers("/api/auth/sign-in", "/api/auth/sign-up").permitAll()
-//                                .requestMatchers("/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                                 .anyRequest().authenticated()
                 )
-//                .formLogin(form -> form.loginProcessingUrl("/api/auth/sign-in"))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session

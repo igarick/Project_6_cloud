@@ -15,7 +15,6 @@ public class MinioConfiguration {
     public MinioClient minioClient(MinioProperties properties) {
         return MinioClient.builder()
                 .endpoint(properties.endpoint())
-//                .endpoint("http://127.0.0.1:9000")
                 .credentials(properties.accessKey(), properties.secretKey())
                 .build();
     }
