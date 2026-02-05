@@ -2,8 +2,9 @@ spring:
   application:
     name: pet_6-test
 
-#  datasource:
-#    url: ""
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  #    url: ""
 #    username: ""
 #    password: ""
 
@@ -13,6 +14,7 @@ spring:
     show-sql: true
 
   liquibase:
+#    enabled: false
     enabled: true
 
 

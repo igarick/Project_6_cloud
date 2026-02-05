@@ -1,11 +1,7 @@
-package org.file.cloud.exception.folder;
+package org.file.cloud.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.file.cloud.exception.BaseException;
-import org.file.cloud.exception.ErrorInfo;
-
-import java.util.prefs.BackingStoreException;
 
 @Getter
 @AllArgsConstructor

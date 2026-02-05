@@ -7,13 +7,13 @@ import io.minio.RemoveBucketArgs;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.configuration.MinioProperties;
 import org.file.cloud.dto.RequestUserDto;
-import org.file.cloud.dto.folder.ResponseResourceDto;
-import org.file.cloud.exception.folder.ResourceException;
+import org.file.cloud.dto.ResponseResourceDto;
+import org.file.cloud.exception.ResourceException;
 import org.file.cloud.repository.UserRepository;
-import org.file.cloud.service.MinioDirectoryService;
-import org.file.cloud.service.MinioResourceService;
-import org.file.cloud.service.StorageResourceValidator;
-import org.file.cloud.service.UserRootFolderManager;
+import org.file.cloud.service.minio.MinioDirectoryService;
+import org.file.cloud.service.minio.MinioResourceService;
+import org.file.cloud.service.minio.StorageResourceValidator;
+import org.file.cloud.service.path.UserRootFolderManager;
 import org.file.cloud.service.minio.MinioStorageService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Slf4j
-class MinioDirectoryControllerTest extends BaseIntegrationTest {
+class MinioResourceServiceTest extends BaseIntegrationTest {
 
     @Autowired
     MinioClient minioClient;

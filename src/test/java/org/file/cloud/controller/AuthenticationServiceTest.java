@@ -12,7 +12,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-class AuthControllerTest extends BaseIntegrationTest {
+class AuthenticationServiceTest extends BaseIntegrationTest {
 
     @Autowired
     PasswordEncoder passwordEncoder;

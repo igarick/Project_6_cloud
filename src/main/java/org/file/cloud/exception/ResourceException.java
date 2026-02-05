@@ -1,7 +1,4 @@
-package org.file.cloud.exception.folder;
-
-import org.file.cloud.exception.BaseException;
-import org.file.cloud.exception.ErrorInfo;
+package org.file.cloud.exception;
 
 public class ResourceException extends BaseException {
     public ResourceException(ErrorInfo errorInfo) {

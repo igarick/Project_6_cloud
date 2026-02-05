@@ -2,7 +2,7 @@ package org.file.cloud.validator;
 
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.exception.ErrorInfo;
-import org.file.cloud.exception.path.InvalidOrEmptyPathException;
+import org.file.cloud.exception.InvalidOrEmptyPathException;
 
 @Slf4j
 public class PathValidator {

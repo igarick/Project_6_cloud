@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.doc.AuthSwagger;
 import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.dto.UsernameDto;
-import org.file.cloud.service.UserRootFolderManager;
+import org.file.cloud.service.path.UserRootFolderManager;
 import org.file.cloud.service.UserService;
 import org.file.cloud.validator.RequestValidator;
 import org.springframework.http.ResponseEntity;

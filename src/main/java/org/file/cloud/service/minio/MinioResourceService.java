@@ -1,4 +1,4 @@
-package org.file.cloud.service;
+package org.file.cloud.service.minio;
 
 import io.minio.Result;
 import io.minio.messages.DeleteError;
@@ -7,12 +7,14 @@ import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.builder.ResponseDtoBuilder;
-import org.file.cloud.dto.folder.ResponseResourceDto;
+import org.file.cloud.dto.ResponseResourceDto;
 import org.file.cloud.exception.ErrorInfo;
-import org.file.cloud.exception.folder.ResourceException;
-import org.file.cloud.exception.path.InvalidOrEmptyPathException;
+import org.file.cloud.exception.ResourceException;
+import org.file.cloud.exception.InvalidOrEmptyPathException;
 import org.file.cloud.repository.UserRepository;
-import org.file.cloud.service.minio.MinioStorageService;
+import org.file.cloud.service.path.PathService;
+import org.file.cloud.service.path.UserRootFolderManager;
+import org.file.cloud.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;

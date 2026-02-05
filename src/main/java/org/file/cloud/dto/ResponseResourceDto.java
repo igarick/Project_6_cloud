@@ -1,4 +1,4 @@
-package org.file.cloud.dto.folder;
+package org.file.cloud.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;

@@ -10,6 +10,7 @@ import org.file.cloud.exception.DuplicateUserException;
 import org.file.cloud.exception.ErrorInfo;
 import org.file.cloud.model.User;
 import org.file.cloud.repository.UserRepository;
+import org.file.cloud.service.path.UserRootFolderManager;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
@@ -57,9 +58,8 @@ public class UserService {
     }
 
     public void createUserRootFolder(RequestUserDto requestUserDto) {
-        log.debug("Start creating ROOT folder");
+        log.info("Start creating ROOT folder");
         Long userId = userRepository.findIdByUsernameIgnoreCase(requestUserDto.getUsername());
-        log.debug("User id = {}", userId);
         userRootFolderManager.createUserRootFolder(userId);
     }
 

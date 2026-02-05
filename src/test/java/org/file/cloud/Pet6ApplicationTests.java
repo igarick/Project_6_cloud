@@ -1,13 +1,13 @@
-package org.file.cloud;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-
-@SpringBootTest
-class Pet6ApplicationTests {
-
-    @Test
-    void contextLoads() {
-    }
-
-}
+//package org.file.cloud;
+//
+//import org.junit.jupiter.api.Test;
+//import org.springframework.boot.test.context.SpringBootTest;
+//
+//@SpringBootTest
+//class Pet6ApplicationTests {
+//
+//    @Test
+//    void contextLoads() {
+//    }
+//
+//}

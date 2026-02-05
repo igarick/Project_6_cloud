@@ -1,4 +1,4 @@
-package org.file.cloud.minio;
+package org.file.cloud.configuration;
 
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
@@ -16,16 +16,18 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserFilesBucketInitializer {
     private final MinioClient minioClient;
-    private final String BUCKET = "user-files";
+    private final MinioProperties minioProperties;
+//    private final String BUCKET = "user-files";
 
     @EventListener(ApplicationReadyEvent.class)
     public void createBucketIfNotExists() throws Exception {
         if (!minioClient.bucketExists(BucketExistsArgs.builder()
-                .bucket(BUCKET)
+                .bucket(minioProperties.bucket())
+//                .bucket(BUCKET)
                 .build())) {
-            log.info("Creating bucket - {}", BUCKET);
+            log.info("Creating bucket - {}", minioProperties.bucket());
             minioClient.makeBucket(MakeBucketArgs.builder()
-                    .bucket(BUCKET)
+                    .bucket(minioProperties.bucket())
                     .build());
         }
     }

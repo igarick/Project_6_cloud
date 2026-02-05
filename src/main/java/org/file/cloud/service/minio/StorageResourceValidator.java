@@ -1,12 +1,12 @@
-package org.file.cloud.service;
+package org.file.cloud.service.minio;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.exception.ErrorInfo;
-import org.file.cloud.exception.folder.ResourceAlreadyExistsException;
-import org.file.cloud.exception.folder.ResourceException;
-import org.file.cloud.exception.path.InvalidOrEmptyPathException;
-import org.file.cloud.service.minio.MinioStorageService;
+import org.file.cloud.exception.ResourceAlreadyExistsException;
+import org.file.cloud.exception.ResourceException;
+import org.file.cloud.exception.InvalidOrEmptyPathException;
+import org.file.cloud.service.path.PathService;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -73,16 +73,6 @@ public class StorageResourceValidator {
         log.info("File does not exist: path = {}", fullPath);
     }
 
-
-//    public void ensureFileDoesNotExist(String username, String resourcePath) {
-//        String fullPath = pathService.getFullPath(username, resourcePath);
-//        if (minioStorageService.isFileExists(fullPath)) {
-//            log.info("File already exists: path = {}", fullPath);
-//            throw new ResourceAlreadyExistsException(ErrorInfo.RESOURCE_ALREADY_EXISTS, resourcePath);
-//        }
-//        log.info("File does not exist: path = {}", fullPath);
-//    }
-
     public void ensureFolderDoesNotExist(String fullPath, String to) {
         if (minioStorageService.isFolderExists(fullPath)) {
             log.error("Folder already exists: path = {}", fullPath);
@@ -90,15 +80,6 @@ public class StorageResourceValidator {
         }
         log.info("Folder does not exist: path = {}", fullPath);
     }
-
-//    public void ensureFolderDoesNotExist(String username, String resourcePath) {
-//        String fullPath = pathService.getFullPath(username, resourcePath);
-//        if (minioStorageService.isFolderExists(fullPath)) {
-//            log.error("Folder already exists: path = {}", fullPath);
-//            throw new ResourceException(ErrorInfo.FOLDER_ALREADY_EXISTS);
-//        }
-//        log.info("Folder does not exist: path = {}", fullPath);
-//    }
 
     public boolean isFolderExists(String username, String resourcePath) {
         String fullPath = pathService.getFullPath(username, resourcePath);

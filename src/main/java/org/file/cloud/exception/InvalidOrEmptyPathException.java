@@ -1,7 +1,4 @@
-package org.file.cloud.exception.path;
-
-import org.file.cloud.exception.BaseException;
-import org.file.cloud.exception.ErrorInfo;
+package org.file.cloud.exception;
 
 public class InvalidOrEmptyPathException extends BaseException {
     public InvalidOrEmptyPathException(ErrorInfo errorInfo) {

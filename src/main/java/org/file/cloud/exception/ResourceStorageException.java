@@ -1,7 +1,4 @@
-package org.file.cloud.exception.minio;
-
-import org.file.cloud.exception.BaseException;
-import org.file.cloud.exception.ErrorInfo;
+package org.file.cloud.exception;
 
 public class ResourceStorageException extends BaseException {
     public ResourceStorageException(ErrorInfo errorInfo) {

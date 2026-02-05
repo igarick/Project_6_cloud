@@ -9,8 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.configuration.MinioProperties;
 import org.file.cloud.exception.ErrorInfo;
-import org.file.cloud.exception.folder.ResourceException;
-import org.file.cloud.exception.minio.ResourceStorageException;
+import org.file.cloud.exception.ResourceStorageException;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;

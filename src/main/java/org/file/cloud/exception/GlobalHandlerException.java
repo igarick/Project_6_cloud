@@ -2,17 +2,14 @@ package org.file.cloud.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.dto.ErrorMessageDto;
-import org.file.cloud.exception.folder.ResourceAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -41,16 +38,6 @@ public class GlobalHandlerException {
                 .status(e.getErrorInfo().getStatusCode())
                 .body(new ErrorMessageDto(errorMessage));
     }
-
-//    @ExceptionHandler(NoResourceFoundException.class)
-//    public ResponseEntity<ErrorMessageDto> handleAlreadyExistsError(NoResourceFoundException e) {
-//        log.error("Maximum uploaded file size exceeded", e);
-//        String errorMessage = ErrorInfo.RESOURCE_NOT_FOUND.getErrorMessage();
-//        int statusCode = ErrorInfo.RESOURCE_NOT_FOUND.getStatusCode();
-//        return ResponseEntity
-//                .status(statusCode)
-//                .body(new ErrorMessageDto(errorMessage));
-//    }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErrorMessageDto> handleMaxUploadSize(MaxUploadSizeExceededException e) {
