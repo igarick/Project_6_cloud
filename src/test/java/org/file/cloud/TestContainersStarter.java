@@ -1,4 +1,4 @@
-package org.file.cloud.controller;
+package org.file.cloud;
 
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.containers.PostgreSQLContainer;

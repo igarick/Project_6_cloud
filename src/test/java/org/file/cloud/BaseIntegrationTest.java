@@ -1,6 +1,5 @@
-package org.file.cloud.controller;
+package org.file.cloud;
 
-import lombok.extern.slf4j.Slf4j;
 import org.file.cloud.repository.UserRepository;
 import org.file.cloud.service.UserService;
 import org.junit.jupiter.api.AfterEach;

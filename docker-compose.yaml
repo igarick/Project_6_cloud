@@ -1,6 +1,7 @@
 
 services:
   db:
+#    image: postgres:16.11
     image: postgres:18.1
     container_name: postgres-db
     environment:
@@ -11,10 +12,12 @@ services:
       - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      start_period: 30s
+      interval: 30s
+      timeout: 15s
+      retries: 3
     volumes:
+#      - db-data:/var/lib/postgresql/data
       - db-data:/var/lib/postgresql
 
   pgadmin:

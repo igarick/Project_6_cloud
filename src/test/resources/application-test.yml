@@ -16,6 +16,8 @@ spring:
   liquibase:
 #    enabled: false
     enabled: true
+#    default-schema: project_schema
+#    liquibase-schema: project_schema
 
 
 logging:

@@ -1,4 +1,4 @@
-package org.file.cloud.controller;
+package org.file.cloud;
 
 import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;

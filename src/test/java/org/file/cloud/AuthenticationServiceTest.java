@@ -1,4 +1,4 @@
-package org.file.cloud.controller;
+package org.file.cloud;
 
 import org.file.cloud.dto.RequestUserDto;
 import org.file.cloud.exception.DuplicateUserException;
