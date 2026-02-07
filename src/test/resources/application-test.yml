@@ -4,9 +4,6 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-  #    url: ""
-#    username: ""
-#    password: ""
 
   jpa:
     hibernate:
@@ -14,10 +11,7 @@ spring:
     show-sql: true
 
   liquibase:
-#    enabled: false
     enabled: true
-#    default-schema: project_schema
-#    liquibase-schema: project_schema
 
 
 logging:
@@ -25,5 +19,4 @@ logging:
     org.hibernate.sql: debug
 
 minio:
-##  endpoint: http://localhost:9000
   bucket: test-bucket
